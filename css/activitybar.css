@@ -1,0 +1,281 @@
+/* ==========================================================
+   Atomic IDE
+   Activity Bar
+   ========================================================== */
+
+.activity-bar{
+
+    width:64px;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
+
+    background:var(--bg-sidebar);
+
+    border-right:1px solid var(--border-color);
+
+    user-select:none;
+
+}
+
+/* ==========================================================
+   Top Icons
+   ========================================================== */
+
+.activity-top{
+
+    width:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+
+    padding-top:12px;
+
+    gap:6px;
+
+}
+
+/* ==========================================================
+   Bottom Icons
+   ========================================================== */
+
+.activity-bottom{
+
+    width:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+
+    padding-bottom:12px;
+
+    gap:6px;
+
+}
+
+/* ==========================================================
+   Buttons
+   ========================================================== */
+
+.activity-btn{
+
+    position:relative;
+
+    width:52px;
+    height:52px;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:transparent;
+
+    color:var(--text-muted);
+
+    cursor:pointer;
+
+    transition:
+        background .25s,
+        color .25s,
+        transform .2s;
+
+}
+
+/* Hover */
+
+.activity-btn:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--color-primary);
+
+}
+
+/* Click */
+
+.activity-btn:active{
+
+    transform:scale(.94);
+
+}
+
+/* ==========================================================
+   Active
+   ========================================================== */
+
+.activity-btn.active{
+
+    background:var(--bg-panel);
+
+    color:var(--color-primary);
+
+}
+
+.activity-btn.active::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    top:10px;
+
+    width:4px;
+
+    height:32px;
+
+    border-radius:5px;
+
+    background:var(--color-primary);
+
+}
+
+/* ==========================================================
+   Icons
+   ========================================================== */
+
+.activity-btn svg{
+
+    width:24px;
+    height:24px;
+
+    stroke:currentColor;
+
+    fill:none;
+
+    stroke-width:2;
+
+}
+
+/* ==========================================================
+   Tooltip
+   ========================================================== */
+
+.activity-btn::after{
+
+    content:attr(data-title);
+
+    position:absolute;
+
+    left:68px;
+
+    top:50%;
+
+    transform:
+        translateY(-50%)
+        scale(.9);
+
+    opacity:0;
+
+    pointer-events:none;
+
+    white-space:nowrap;
+
+    background:var(--bg-panel);
+
+    color:var(--text-primary);
+
+    border:1px solid var(--border-color);
+
+    padding:8px 12px;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    transition:.2s;
+
+    z-index:1000;
+
+}
+
+.activity-btn:hover::after{
+
+    opacity:1;
+
+    transform:
+        translateY(-50%)
+        scale(1);
+
+}
+
+/* ==========================================================
+   Notification Badge
+   ========================================================== */
+
+.activity-badge{
+
+    position:absolute;
+
+    top:7px;
+
+    right:7px;
+
+    min-width:18px;
+
+    height:18px;
+
+    padding:0 5px;
+
+    border-radius:20px;
+
+    background:var(--color-danger);
+
+    color:#fff;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+/* ==========================================================
+   Divider
+   ========================================================== */
+
+.activity-divider{
+
+    width:36px;
+
+    height:1px;
+
+    margin:8px 0;
+
+    background:var(--border-color);
+
+}
+
+/* ==========================================================
+   Logo
+   ========================================================== */
+
+.activity-logo{
+
+    width:42px;
+    height:42px;
+
+    margin-bottom:8px;
+
+    object-fit:contain;
+
+    border-radius:10px;
+
+}
