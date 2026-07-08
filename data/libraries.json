@@ -1,0 +1,265 @@
+{
+    "version": "1.0.0",
+
+    "libraries":[
+
+        {
+
+            "id":"arduino-core",
+
+            "name":"Arduino Core",
+
+            "header":"Arduino.h",
+
+            "platform":"ESP32",
+
+            "functions":[
+
+                "pinMode",
+                "digitalWrite",
+                "digitalRead",
+                "analogRead",
+                "analogWrite",
+                "delay",
+                "millis",
+                "micros",
+                "pulseIn",
+                "tone",
+                "noTone"
+
+            ],
+
+            "classes":[],
+
+            "keywords":[
+
+                "HIGH",
+                "LOW",
+                "INPUT",
+                "OUTPUT",
+                "INPUT_PULLUP"
+
+            ]
+
+        },
+
+        {
+
+            "id":"wifi",
+
+            "name":"WiFi",
+
+            "header":"WiFi.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "WiFi"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "disconnect",
+                "status",
+                "localIP",
+                "softAP"
+
+            ]
+
+        },
+
+        {
+
+            "id":"webserver",
+
+            "name":"WebServer",
+
+            "header":"WebServer.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "WebServer"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "on",
+                "send",
+                "handleClient"
+
+            ]
+
+        },
+
+        {
+
+            "id":"websocket",
+
+            "name":"WebSockets",
+
+            "header":"WebSocketsServer.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "WebSocketsServer"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "broadcastTXT",
+                "sendTXT",
+                "loop"
+
+            ]
+
+        },
+
+        {
+
+            "id":"servo",
+
+            "name":"ESP32Servo",
+
+            "header":"ESP32Servo.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "Servo"
+
+            ],
+
+            "functions":[
+
+                "attach",
+                "detach",
+                "write",
+                "writeMicroseconds"
+
+            ]
+
+        },
+
+        {
+
+            "id":"dht",
+
+            "name":"DHT Sensor",
+
+            "header":"DHT.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "DHT"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "readTemperature",
+                "readHumidity"
+
+            ]
+
+        },
+
+        {
+
+            "id":"oled",
+
+            "name":"Adafruit SSD1306",
+
+            "header":"Adafruit_SSD1306.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "Adafruit_SSD1306"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "clearDisplay",
+                "display",
+                "setCursor",
+                "print",
+                "println"
+
+            ]
+
+        },
+
+        {
+
+            "id":"newping",
+
+            "name":"NewPing",
+
+            "header":"NewPing.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "NewPing"
+
+            ],
+
+            "functions":[
+
+                "ping_cm",
+                "ping"
+
+            ]
+
+        },
+
+        {
+
+            "id":"preferences",
+
+            "name":"Preferences",
+
+            "header":"Preferences.h",
+
+            "platform":"ESP32",
+
+            "classes":[
+
+                "Preferences"
+
+            ],
+
+            "functions":[
+
+                "begin",
+                "putString",
+                "getString",
+                "putInt",
+                "getInt",
+                "end"
+
+            ]
+
+        }
+
+    ]
+}
