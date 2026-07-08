@@ -1,0 +1,384 @@
+/* ==========================================================
+   Atomic IDE
+   Sidebar (Explorer)
+   ========================================================== */
+
+.sidebar{
+
+    width:280px;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    background:var(--bg-sidebar);
+
+    border-right:1px solid var(--border-color);
+
+    overflow:hidden;
+
+}
+
+/* ==========================================================
+   Sidebar Header
+   ========================================================== */
+
+.sidebar-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:18px;
+
+    border-bottom:1px solid var(--border-color);
+
+    background:var(--bg-sidebar);
+
+}
+
+.sidebar-title{
+
+    font-size:15px;
+
+    font-weight:600;
+
+    color:var(--text-primary);
+
+    letter-spacing:.5px;
+
+    text-transform:uppercase;
+
+}
+
+.sidebar-actions{
+
+    display:flex;
+
+    gap:8px;
+
+}
+
+.sidebar-action{
+
+    width:32px;
+
+    height:32px;
+
+    border-radius:8px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:var(--text-secondary);
+
+    background:transparent;
+
+    transition:.2s;
+
+}
+
+.sidebar-action:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--color-primary);
+
+}
+
+/* ==========================================================
+   Search
+   ========================================================== */
+
+.sidebar-search{
+
+    padding:14px;
+
+    border-bottom:1px solid var(--border-color);
+
+}
+
+.sidebar-search input{
+
+    width:100%;
+
+    height:38px;
+
+    padding:0 14px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:8px;
+
+    background:var(--bg-panel);
+
+    color:var(--text-primary);
+
+}
+
+.sidebar-search input::placeholder{
+
+    color:var(--text-muted);
+
+}
+
+/* ==========================================================
+   Explorer
+   ========================================================== */
+
+.sidebar-content{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    padding:8px;
+
+}
+
+/* ==========================================================
+   Folder
+   ========================================================== */
+
+.folder{
+
+    margin-bottom:6px;
+
+}
+
+.folder-header{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:10px 12px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    color:var(--text-secondary);
+
+    transition:.2s;
+
+}
+
+.folder-header:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--text-primary);
+
+}
+
+.folder.open>.folder-header{
+
+    color:var(--color-primary);
+
+}
+
+.folder-arrow{
+
+    width:12px;
+
+    transition:.2s;
+
+}
+
+.folder.open .folder-arrow{
+
+    transform:rotate(90deg);
+
+}
+
+.folder-icon{
+
+    font-size:18px;
+
+}
+
+/* ==========================================================
+   File List
+   ========================================================== */
+
+.file-list{
+
+    margin-left:22px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:4px;
+
+    padding-top:4px;
+
+}
+
+.file{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:8px 12px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    color:var(--text-secondary);
+
+    transition:.2s;
+
+}
+
+.file:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--text-primary);
+
+}
+
+/* Active File */
+
+.file.active{
+
+    background:rgba(80,250,123,.15);
+
+    color:var(--color-primary);
+
+    border-left:3px solid var(--color-primary);
+
+}
+
+/* File Icon */
+
+.file-icon{
+
+    width:18px;
+
+    text-align:center;
+
+}
+
+/* ==========================================================
+   Components Category
+   ========================================================== */
+
+.component-category{
+
+    margin-top:18px;
+
+}
+
+.component-title{
+
+    margin-bottom:8px;
+
+    padding-left:10px;
+
+    color:var(--text-muted);
+
+    font-size:12px;
+
+    font-weight:600;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+}
+
+.component-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:10px 12px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    color:var(--text-secondary);
+
+}
+
+.component-item:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--color-primary);
+
+}
+
+/* ==========================================================
+   Empty State
+   ========================================================== */
+
+.sidebar-empty{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    color:var(--text-muted);
+
+    padding:40px 20px;
+
+    gap:12px;
+
+}
+
+.sidebar-empty svg{
+
+    width:60px;
+
+    height:60px;
+
+    opacity:.4;
+
+}
+
+/* ==========================================================
+   Footer
+   ========================================================== */
+
+.sidebar-footer{
+
+    padding:14px;
+
+    border-top:1px solid var(--border-color);
+
+    background:var(--bg-sidebar);
+
+    font-size:13px;
+
+    color:var(--text-muted);
+
+}
