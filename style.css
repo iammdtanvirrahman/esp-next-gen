@@ -1,0 +1,107 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1e1e24;
+    color: #f8f8f2;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.ide-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* কন্ট্রোল বার */
+.control-bar {
+    background-color: #2d2d34;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3d3d45;
+}
+
+.control-bar h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #50fa7b;
+}
+
+.esp-settings input {
+    background: #1e1e24;
+    border: 1px solid #6272a4;
+    color: #fff;
+    padding: 8px;
+    border-radius: 5px;
+    outline: none;
+}
+
+button {
+    background-color: #6272a4;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover {
+    filter: brightness(1.2);
+}
+
+#runBtn {
+    background-color: #50fa7b;
+    color: #282a36;
+}
+
+/* মেইন এরিয়া গ্রিড */
+.main-content {
+    display: grid;
+    grid-template-columns: 65% 35%;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* কোড এডিটর সাইজ */
+.editor-section {
+    height: 100%;
+}
+
+.CodeMirror {
+    height: 100% !important;
+    font-size: 16px;
+}
+
+/* টার্মিনাল ডিজাইন */
+.terminal-section {
+    background-color: #282a36;
+    border-left: 2px solid #3d3d45;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-header {
+    background-color: #21222c;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ff79c6;
+    border-bottom: 1px solid #3d3d45;
+}
+
+.terminal-console {
+    padding: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    color: #f8f8f2;
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
