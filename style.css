@@ -5,8 +5,7 @@ body {
     background-color: #1e1e24;
     color: #f8f8f2;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
 }
 
 .ide-container {
@@ -15,7 +14,6 @@ body {
     height: 100vh;
 }
 
-/* কন্ট্রোল বার */
 .control-bar {
     background-color: #2d2d34;
     padding: 10px 20px;
@@ -48,11 +46,6 @@ button {
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    transition: 0.2s;
-}
-
-button:hover {
-    filter: brightness(1.2);
 }
 
 #runBtn {
@@ -60,48 +53,148 @@ button:hover {
     color: #282a36;
 }
 
-/* মেইন এরিয়া গ্রিড */
+/* ৩ কলামের লেআউট */
 .main-content {
     display: grid;
-    grid-template-columns: 65% 35%;
+    grid-template-columns: 25% 45% 30%;
     flex: 1;
     overflow: hidden;
 }
 
-/* কোড এডিটর সাইজ */
-.editor-section {
-    height: 100%;
-}
-
-.CodeMirror {
-    height: 100% !important;
-    font-size: 16px;
-}
-
-/* টার্মিনাল ডিজাইন */
-.terminal-section {
+/* সার্কিট সেকশন স্টাইল */
+.circuit-section {
     background-color: #282a36;
-    border-left: 2px solid #3d3d45;
+    border-right: 2px solid #3d3d45;
     display: flex;
     flex-direction: column;
+    padding: 10px;
 }
 
-.terminal-header {
+.circuit-header, .terminal-header, .joystick-header {
     background-color: #21222c;
     padding: 10px;
     font-size: 14px;
     font-weight: bold;
     color: #ff79c6;
     border-bottom: 1px solid #3d3d45;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.esp32-board {
+    background-color: #191a21;
+    border: 3px solid #50fa7b;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.board-title {
+    text-align: center;
+    font-weight: bold;
+    color: #50fa7b;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #44475a;
+    padding-bottom: 5px;
+}
+
+.pin-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pin-label {
+    font-size: 13px;
+    font-family: monospace;
+}
+
+.pin-row select {
+    background: #282a36;
+    color: #f8f8f2;
+    border: 1px solid #6272a4;
+    padding: 4px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.circuit-status {
+    margin-top: auto;
+    font-size: 12px;
+    color: #f1fa8c;
+    text-align: center;
+    background: #21222c;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+/* এডিটর ও সাইড প্যানেল */
+.editor-section { height: 100%; }
+.CodeMirror { height: 100% !important; font-size: 15px; }
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-left: 2px solid #3d3d45;
+}
+
+.terminal-section {
+    flex: 1;
+    background-color: #282a36;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .terminal-console {
     padding: 15px;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
+    font-size: 13px;
     color: #f8f8f2;
     flex: 1;
     overflow-y: auto;
     white-space: pre-wrap;
-    line-height: 1.5;
+}
+
+/* জয়স্টিক */
+.joystick-section {
+    background-color: #282a36;
+    padding-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 2px solid #3d3d45;
+}
+
+.joystick-container {
+    width: 100px;
+    height: 100px;
+    background: #44475a;
+    border-radius: 50%;
+    position: relative;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+    touch-action: none;
+}
+
+.joystick-stick {
+    width: 40px;
+    height: 40px;
+    background: #ff79c6;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+}
+
+.joystick-data {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    color: #50fa7b;
 }
