@@ -53,7 +53,7 @@ button {
     color: #282a36;
 }
 
-/* ৩ কলামের লেআউট */
+/* ৩ কলাম গ্রিড লেআউট */
 .main-content {
     display: grid;
     grid-template-columns: 25% 45% 30%;
@@ -61,19 +61,19 @@ button {
     overflow: hidden;
 }
 
-/* সার্কিট সেকশন স্টাইল */
+/* সার্কিট সেকশন */
 .circuit-section {
     background-color: #282a36;
     border-right: 2px solid #3d3d45;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 15px;
 }
 
 .circuit-header, .terminal-header, .joystick-header {
     background-color: #21222c;
     padding: 10px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     color: #ff79c6;
     border-bottom: 1px solid #3d3d45;
@@ -86,7 +86,7 @@ button {
     border: 3px solid #50fa7b;
     border-radius: 10px;
     padding: 15px;
-    margin: 20px 5px;
+    margin: 15px 0;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
@@ -97,6 +97,7 @@ button {
     margin-bottom: 15px;
     border-bottom: 1px dashed #44475a;
     padding-bottom: 5px;
+    font-size: 14px;
 }
 
 .pin-row {
@@ -107,7 +108,7 @@ button {
 }
 
 .pin-label {
-    font-size: 13px;
+    font-size: 12px;
     font-family: monospace;
 }
 
@@ -115,22 +116,25 @@ button {
     background: #282a36;
     color: #f8f8f2;
     border: 1px solid #6272a4;
-    padding: 4px;
+    padding: 5px;
     border-radius: 4px;
     outline: none;
+    font-size: 12px;
+    width: 120px;
 }
 
 .circuit-status {
     margin-top: auto;
-    font-size: 12px;
+    font-size: 13px;
     color: #f1fa8c;
-    text-align: center;
     background: #21222c;
-    padding: 8px;
+    padding: 12px;
     border-radius: 5px;
+    line-height: 1.4;
+    border: 1px solid #44475a;
 }
 
-/* এডিটর ও সাইড প্যানেল */
+/* এডিটর ও ডানপাশ */
 .editor-section { height: 100%; }
 .CodeMirror { height: 100% !important; font-size: 15px; }
 
