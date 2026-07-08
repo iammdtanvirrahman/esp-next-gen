@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Virtual IDE & Circuit Configurator</title>
+    <title>ESP32 Universal Cloud IDE & Configurator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,7 +12,7 @@
 
     <div class="ide-container">
         <div class="control-bar">
-            <h2>ESP32 Virtual IDE & Configurator</h2>
+            <h2>ESP32 Universal IDE (Cloud Libraries)</h2>
             <div class="esp-settings">
                 <input type="text" id="espIp" placeholder="ESP IP (e.g., 192.168.4.1)">
                 <button id="connectBtn" onclick="connectESP()">কানেক্ট</button>
@@ -25,49 +25,46 @@
         <div class="main-content">
             
             <div class="circuit-section">
-                <div class="circuit-header">সার্কিট মডেল (Pin Mapper)</div>
+                <div class="circuit-header">সার্কিট মডেল ও লাইব্রেরি ম্যানেজার</div>
                 <div class="esp32-board">
                     <div class="board-title">ESP32 DEVKIT V1</div>
                     
                     <div class="pin-row">
-                        <span class="pin-label">GPIO 2 (Built-in LED)</span>
+                        <span class="pin-label">GPIO 2 (LED)</span>
                         <select id="pin2" onchange="mapPin(2, this.value)">
                             <option value="none">খালি (None)</option>
                             <option value="led">LED (এলইডি)</option>
-                            <option value="buzzer">Buzzer (ব্লাস্টার)</option>
-                            <option value="relay">Relay (সুইচ)</option>
+                            <option value="buzzer">Buzzer (অ্যালার্ম)</option>
                         </select>
                     </div>
 
                     <div class="pin-row">
-                        <span class="pin-label">GPIO 4</span>
+                        <span class="pin-label">GPIO 4 (Sensor)</span>
                         <select id="pin4" onchange="mapPin(4, this.value)">
                             <option value="none">খালি (None)</option>
-                            <option value="led">LED (এলইডি)</option>
-                            <option value="buzzer">Buzzer (ব্লাস্টার)</option>
-                            <option value="servo">Servo Motor</option>
+                            <option value="dht11">DHT11 (তাপমাত্রা সেন্সর)</option>
+                            <option value="sonar">HC-SR04 (আল্ট্রাসনিক)</option>
                         </select>
                     </div>
 
                     <div class="pin-row">
-                        <span class="pin-label">GPIO 5</span>
+                        <span class="pin-label">GPIO 5 (Actuator)</span>
                         <select id="pin5" onchange="mapPin(5, this.value)">
                             <option value="none">খালি (None)</option>
-                            <option value="led">LED (এলইডি)</option>
-                            <option value="motor">DC Motor</option>
+                            <option value="servo">Servo Motor (সার্ভো)</option>
+                            <option value="motor">DC Motor Driver</option>
                         </select>
                     </div>
 
                     <div class="pin-row">
-                        <span class="pin-label">GPIO 18</span>
+                        <span class="pin-label">GPIO 18 (Display)</span>
                         <select id="pin18" onchange="mapPin(18, this.value)">
                             <option value="none">খালি (None)</option>
-                            <option value="led">LED (এলইডি)</option>
-                            <option value="sensor">IR Sensor</option>
+                            <option value="lcd_i2c">I2C LCD Display (ডিসপ্লে)</option>
                         </select>
                     </div>
                 </div>
-                <div id="circuitStatus" class="circuit-status">কোনো ডিভাইস ম্যাপ করা হয়নি।</div>
+                <div id="circuitStatus" class="circuit-status">কোনো ডিভাইস ম্যাপ করা হয়নি। লাইব্রেরি নিষ্ক্রিয়।</div>
             </div>
 
             <div class="editor-section">
@@ -78,7 +75,7 @@
                 <div class="terminal-section">
                     <div class="terminal-header">ভার্চুয়াল টার্মিনাল আউটপুট</div>
                     <div id="terminalConsole" class="terminal-console">
-                        Ready to compile virtually...
+                        Ready to compile with Cloud Libraries virtually...
                     </div>
                 </div>
 
