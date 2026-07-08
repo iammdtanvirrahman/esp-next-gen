@@ -1,0 +1,385 @@
+/* ==========================================================
+   Atomic IDE
+   Explorer Tree
+   ========================================================== */
+
+/* Explorer Container */
+
+.explorer{
+
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+
+}
+
+/* ==========================================================
+   Section
+   ========================================================== */
+
+.explorer-section{
+
+    margin-bottom:16px;
+
+}
+
+.explorer-section-title{
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:10px 14px;
+
+    color:var(--text-muted);
+
+    font-size:12px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+}
+
+/* ==========================================================
+   Tree
+   ========================================================== */
+
+.tree{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:2px;
+
+}
+
+/* ==========================================================
+   Item
+   ========================================================== */
+
+.tree-item{
+
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+
+    min-height:34px;
+
+    padding:7px 12px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    transition:
+        background .2s,
+        color .2s,
+        padding-left .2s;
+
+    color:var(--text-secondary);
+
+}
+
+.tree-item:hover{
+
+    background:var(--bg-hover);
+
+    color:var(--text-primary);
+
+}
+
+/* Selected */
+
+.tree-item.selected{
+
+    background:rgba(80,250,123,.12);
+
+    color:var(--color-primary);
+
+    border-left:3px solid var(--color-primary);
+
+}
+
+/* ==========================================================
+   Indentation
+   ========================================================== */
+
+.level-1{
+
+    padding-left:18px;
+
+}
+
+.level-2{
+
+    padding-left:38px;
+
+}
+
+.level-3{
+
+    padding-left:58px;
+
+}
+
+.level-4{
+
+    padding-left:78px;
+
+}
+
+/* ==========================================================
+   Folder
+   ========================================================== */
+
+.tree-folder{
+
+    font-weight:600;
+
+}
+
+.tree-folder>.tree-icon{
+
+    color:#E8C547;
+
+}
+
+/* ==========================================================
+   File
+   ========================================================== */
+
+.tree-file{
+
+    font-weight:500;
+
+}
+
+/* ==========================================================
+   Icons
+   ========================================================== */
+
+.tree-icon{
+
+    width:20px;
+
+    text-align:center;
+
+    flex-shrink:0;
+
+}
+
+/* HTML */
+
+.file-html .tree-icon{
+
+    color:#E34F26;
+
+}
+
+/* CSS */
+
+.file-css .tree-icon{
+
+    color:#2965F1;
+
+}
+
+/* JavaScript */
+
+.file-js .tree-icon{
+
+    color:#F7DF1E;
+
+}
+
+/* JSON */
+
+.file-json .tree-icon{
+
+    color:#5ED3F3;
+
+}
+
+/* Image */
+
+.file-image .tree-icon{
+
+    color:#C678DD;
+
+}
+
+/* Markdown */
+
+.file-md .tree-icon{
+
+    color:#42B883;
+
+}
+
+/* Font */
+
+.file-font .tree-icon{
+
+    color:#FF79C6;
+
+}
+
+/* ==========================================================
+   Git Status
+   ========================================================== */
+
+.git-status{
+
+    margin-left:auto;
+
+    font-size:11px;
+
+    font-weight:700;
+
+}
+
+.git-added{
+
+    color:#50FA7B;
+
+}
+
+.git-modified{
+
+    color:#F1FA8C;
+
+}
+
+.git-deleted{
+
+    color:#FF5555;
+
+}
+
+/* ==========================================================
+   Expand Arrow
+   ========================================================== */
+
+.expand-arrow{
+
+    width:14px;
+
+    transition:.25s;
+
+}
+
+.tree-folder.open>.expand-arrow{
+
+    transform:rotate(90deg);
+
+}
+
+/* ==========================================================
+   Drag Indicator
+   ========================================================== */
+
+.drag-over{
+
+    outline:2px dashed var(--color-primary);
+
+    outline-offset:-4px;
+
+}
+
+/* ==========================================================
+   Context Menu Target
+   ========================================================== */
+
+.context-selected{
+
+    background:rgba(139,233,253,.15);
+
+}
+
+/* ==========================================================
+   Rename
+   ========================================================== */
+
+.rename-input{
+
+    width:100%;
+
+    padding:4px 8px;
+
+    border:none;
+
+    outline:none;
+
+    border-radius:6px;
+
+    background:var(--bg-panel);
+
+    color:var(--text-primary);
+
+}
+
+/* ==========================================================
+   Collapse Animation
+   ========================================================== */
+
+.tree-children{
+
+    overflow:hidden;
+
+    transition:
+        max-height .25s ease,
+        opacity .25s ease;
+
+    max-height:1200px;
+
+    opacity:1;
+
+}
+
+.tree-children.collapsed{
+
+    max-height:0;
+
+    opacity:0;
+
+}
+
+/* ==========================================================
+   Empty Explorer
+   ========================================================== */
+
+.explorer-empty{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    height:100%;
+
+    color:var(--text-muted);
+
+    gap:12px;
+
+}
+
+.explorer-empty svg{
+
+    width:72px;
+
+    height:72px;
+
+    opacity:.35;
+
+}
