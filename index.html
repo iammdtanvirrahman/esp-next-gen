@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP Virtual IDE</title>
-    <!-- CodeMirror CSS (এডিটরের ডিজাইনের জন্য) -->
+    <title>ESP32 Virtual IDE & Circuit Configurator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,9 +11,8 @@
 <body>
 
     <div class="ide-container">
-        <!-- ওপরের কন্ট্রোল বার -->
         <div class="control-bar">
-            <h2>ESP Virtual IDE</h2>
+            <h2>ESP32 Virtual IDE & Configurator</h2>
             <div class="esp-settings">
                 <input type="text" id="espIp" placeholder="ESP IP (e.g., 192.168.4.1)">
                 <button id="connectBtn" onclick="connectESP()">কানেক্ট</button>
@@ -24,24 +22,78 @@
             </div>
         </div>
 
-        <!-- মাঝখানের মেইন সেকশন (এডিটর + টার্মিনাল) -->
         <div class="main-content">
-            <!-- কোড এডিটর এরিয়া -->
+            
+            <div class="circuit-section">
+                <div class="circuit-header">সার্কিট মডেল (Pin Mapper)</div>
+                <div class="esp32-board">
+                    <div class="board-title">ESP32 DEVKIT V1</div>
+                    
+                    <div class="pin-row">
+                        <span class="pin-label">GPIO 2 (Built-in LED)</span>
+                        <select id="pin2" onchange="mapPin(2, this.value)">
+                            <option value="none">খালি (None)</option>
+                            <option value="led">LED (এলইডি)</option>
+                            <option value="buzzer">Buzzer (ব্লাস্টার)</option>
+                            <option value="relay">Relay (সুইচ)</option>
+                        </select>
+                    </div>
+
+                    <div class="pin-row">
+                        <span class="pin-label">GPIO 4</span>
+                        <select id="pin4" onchange="mapPin(4, this.value)">
+                            <option value="none">খালি (None)</option>
+                            <option value="led">LED (এলইডি)</option>
+                            <option value="buzzer">Buzzer (ব্লাস্টার)</option>
+                            <option value="servo">Servo Motor</option>
+                        </select>
+                    </div>
+
+                    <div class="pin-row">
+                        <span class="pin-label">GPIO 5</span>
+                        <select id="pin5" onchange="mapPin(5, this.value)">
+                            <option value="none">খালি (None)</option>
+                            <option value="led">LED (এলইডি)</option>
+                            <option value="motor">DC Motor</option>
+                        </select>
+                    </div>
+
+                    <div class="pin-row">
+                        <span class="pin-label">GPIO 18</span>
+                        <select id="pin18" onchange="mapPin(18, this.value)">
+                            <option value="none">খালি (None)</option>
+                            <option value="led">LED (এলইডি)</option>
+                            <option value="sensor">IR Sensor</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="circuitStatus" class="circuit-status">কোনো ডিভাইস ম্যাপ করা হয়নি।</div>
+            </div>
+
             <div class="editor-section">
                 <textarea id="codeEditor"></textarea>
             </div>
             
-            <!-- ভার্চুয়াল টার্মিনাল এরিয়া -->
-            <div class="terminal-section">
-                <div class="terminal-header">ভার্চুয়াল টার্মিনাল আউটপুট</div>
-                <div id="terminalConsole" class="terminal-console">
-                    Ready to compile virtually...
+            <div class="side-panel">
+                <div class="terminal-section">
+                    <div class="terminal-header">ভার্চুয়াল টার্মিনাল আউটপুট</div>
+                    <div id="terminalConsole" class="terminal-console">
+                        Ready to compile virtually...
+                    </div>
+                </div>
+
+                <div class="joystick-section">
+                    <div class="joystick-header">ESP জয়স্টিক কন্ট্রোল</div>
+                    <div class="joystick-container">
+                        <div id="joystickStick" class="joystick-stick"></div>
+                    </div>
+                    <div id="joystickData" class="joystick-data">X: 0, Y: 0 | Status: Center</div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- CodeMirror JS (এডিটরের লজিকের জন্য) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
     <script src="script.js"></script>
