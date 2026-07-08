@@ -376,3 +376,439 @@
     font-size:13px;
 
 }
+/* ==========================================================
+   Component Instance
+   ========================================================== */
+
+.hardware-component{
+
+    position:absolute;
+
+    min-width:90px;
+    min-height:70px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    gap:8px;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:var(--bg-panel);
+
+    border:2px solid transparent;
+
+    cursor:move;
+
+    user-select:none;
+
+    transition:
+        transform .2s,
+        border-color .2s,
+        box-shadow .2s;
+
+}
+
+.hardware-component:hover{
+
+    border-color:var(--color-primary);
+
+    box-shadow:var(--shadow-medium);
+
+    transform:translateY(-2px);
+
+}
+
+.hardware-component.selected{
+
+    border-color:var(--color-secondary);
+
+    box-shadow:0 0 20px rgba(139,233,253,.35);
+
+}
+
+/* ==========================================================
+   Component Label
+   ========================================================== */
+
+.hardware-component-name{
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:var(--text-primary);
+
+}
+
+.hardware-component-value{
+
+    font-size:12px;
+
+    color:var(--text-muted);
+
+}
+
+/* ==========================================================
+   Resize Handles
+   ========================================================== */
+
+.resize-handle{
+
+    position:absolute;
+
+    width:10px;
+    height:10px;
+
+    background:var(--color-primary);
+
+    border-radius:50%;
+
+}
+
+.resize-handle.top-left{
+
+    top:-5px;
+    left:-5px;
+
+}
+
+.resize-handle.top-right{
+
+    top:-5px;
+    right:-5px;
+
+}
+
+.resize-handle.bottom-left{
+
+    bottom:-5px;
+    left:-5px;
+
+}
+
+.resize-handle.bottom-right{
+
+    bottom:-5px;
+    right:-5px;
+
+}
+
+/* ==========================================================
+   Rotation Handle
+   ========================================================== */
+
+.rotate-handle{
+
+    position:absolute;
+
+    top:-34px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    width:18px;
+    height:18px;
+
+    border-radius:50%;
+
+    background:var(--color-warning);
+
+    cursor:grab;
+
+}
+
+/* ==========================================================
+   SVG Wire Layer
+   ========================================================== */
+
+.hardware-wires{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+
+}
+
+.hardware-wire{
+
+    fill:none;
+
+    stroke:var(--color-primary);
+
+    stroke-width:3;
+
+    stroke-linecap:round;
+
+    stroke-linejoin:round;
+
+}
+
+/* ==========================================================
+   Animated Signal
+   ========================================================== */
+
+.hardware-wire.signal{
+
+    stroke-dasharray:12 12;
+
+    animation:wireSignal 1s linear infinite;
+
+}
+
+@keyframes wireSignal{
+
+    from{
+
+        stroke-dashoffset:24;
+
+    }
+
+    to{
+
+        stroke-dashoffset:0;
+
+    }
+
+}
+
+/* ==========================================================
+   Connection Points
+   ========================================================== */
+
+.connection-point{
+
+    width:12px;
+    height:12px;
+
+    border-radius:50%;
+
+    background:var(--bg-card);
+
+    border:2px solid var(--color-primary);
+
+    position:absolute;
+
+    cursor:crosshair;
+
+}
+
+.connection-point.active{
+
+    background:var(--color-primary);
+
+    box-shadow:0 0 14px rgba(80,250,123,.6);
+
+}
+
+/* ==========================================================
+   LED Component
+   ========================================================== */
+
+.led-component{
+
+    width:26px;
+    height:26px;
+
+    border-radius:50%;
+
+    background:#333;
+
+    transition:.25s;
+
+}
+
+.led-component.on{
+
+    background:#50FA7B;
+
+    box-shadow:0 0 24px #50FA7B;
+
+}
+
+.led-component.off{
+
+    background:#3b3b3b;
+
+}
+
+/* ==========================================================
+   Servo
+   ========================================================== */
+
+.servo-arm{
+
+    width:70px;
+
+    height:6px;
+
+    background:#ddd;
+
+    transform-origin:left center;
+
+    transition:transform .25s linear;
+
+}
+
+/* ==========================================================
+   Relay
+   ========================================================== */
+
+.relay-state{
+
+    padding:4px 10px;
+
+    border-radius:20px;
+
+    font-size:11px;
+
+    font-weight:700;
+
+}
+
+.relay-state.on{
+
+    background:#50FA7B;
+
+    color:#111;
+
+}
+
+.relay-state.off{
+
+    background:#FF5555;
+
+    color:#fff;
+
+}
+
+/* ==========================================================
+   OLED Preview
+   ========================================================== */
+
+.oled-preview{
+
+    width:128px;
+    height:64px;
+
+    background:#000;
+
+    border:2px solid #888;
+
+    border-radius:6px;
+
+    overflow:hidden;
+
+}
+
+.oled-preview canvas{
+
+    width:100%;
+    height:100%;
+
+}
+
+/* ==========================================================
+   Ultrasonic Sensor
+   ========================================================== */
+
+.ultrasonic-face{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:12px;
+
+}
+
+.ultrasonic-eye{
+
+    width:24px;
+    height:24px;
+
+    border-radius:50%;
+
+    background:#777;
+
+}
+
+/* ==========================================================
+   DHT Sensor
+   ========================================================== */
+
+.sensor-reading{
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:var(--color-secondary);
+
+}
+
+/* ==========================================================
+   Pan Cursor
+   ========================================================== */
+
+.hardware-canvas.panning{
+
+    cursor:grab;
+
+}
+
+.hardware-canvas.panning:active{
+
+    cursor:grabbing;
+
+}
+
+/* ==========================================================
+   Selection Rectangle
+   ========================================================== */
+
+.selection-box{
+
+    position:absolute;
+
+    border:1px dashed var(--color-secondary);
+
+    background:rgba(139,233,253,.12);
+
+    pointer-events:none;
+
+}
+
+/* ==========================================================
+   Mini Map
+   ========================================================== */
+
+.hardware-minimap{
+
+    position:absolute;
+
+    right:20px;
+
+    bottom:60px;
+
+    width:220px;
+
+    height:140px;
+
+    border-radius:12px;
+
+    background:rgba(0,0,0,.55);
+
+    border:1px solid var(--border-color);
+
+    overflow:hidden;
+
+    backdrop-filter:blur(10px);
+
+}
