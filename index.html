@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP Virtual IDE</title>
+    <!-- CodeMirror CSS (এডিটরের ডিজাইনের জন্য) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="ide-container">
+        <!-- ওপরের কন্ট্রোল বার -->
+        <div class="control-bar">
+            <h2>ESP Virtual IDE</h2>
+            <div class="esp-settings">
+                <input type="text" id="espIp" placeholder="ESP IP (e.g., 192.168.4.1)">
+                <button id="connectBtn" onclick="connectESP()">কানেক্ট</button>
+            </div>
+            <div class="action-buttons">
+                <button id="runBtn" onclick="runVirtualCode()">▶ কোড রান করুন</button>
+            </div>
+        </div>
+
+        <!-- মাঝখানের মেইন সেকশন (এডিটর + টার্মিনাল) -->
+        <div class="main-content">
+            <!-- কোড এডিটর এরিয়া -->
+            <div class="editor-section">
+                <textarea id="codeEditor"></textarea>
+            </div>
+            
+            <!-- ভার্চুয়াল টার্মিনাল এরিয়া -->
+            <div class="terminal-section">
+                <div class="terminal-header">ভার্চুয়াল টার্মিনাল আউটপুট</div>
+                <div id="terminalConsole" class="terminal-console">
+                    Ready to compile virtually...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CodeMirror JS (এডিটরের লজিকের জন্য) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
