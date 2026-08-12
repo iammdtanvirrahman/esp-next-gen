@@ -1,257 +1,61 @@
 {
-    "version": "1.0.0",
-
-    "boards": [
-
-        {
-            "id": "esp32-devkit-v1",
-
-            "name": "ESP32 DevKit V1",
-
-            "manufacturer": "Espressif",
-
-            "gpio": [
-                0,
-                2,
-                4,
-                5,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                21,
-                22,
-                23,
-                25,
-                26,
-                27,
-                32,
-                33,
-                34,
-                35,
-                36,
-                39
-            ]
-        }
-    ],
-
-    "components": [
-
-        {
-
-            "id": "led",
-
-            "name": "LED",
-
-            "category": "Output",
-
-            "icon": "💡",
-
-            "library": null,
-
-            "keyword": "digitalWrite",
-
-            "pins": [
-
-                {
-
-                    "name": "Signal",
-
-                    "type": "Digital"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "button",
-
-            "name": "Push Button",
-
-            "category": "Input",
-
-            "icon": "🔘",
-
-            "library": null,
-
-            "keyword": "digitalRead",
-
-            "pins": [
-
-                {
-
-                    "name": "Signal",
-
-                    "type": "Digital"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "servo",
-
-            "name": "Servo Motor",
-
-            "category": "Motor",
-
-            "icon": "⚙",
-
-            "library": "#include <ESP32Servo.h>",
-
-            "keyword": "Servo",
-
-            "pins": [
-
-                {
-
-                    "name": "PWM",
-
-                    "type": "PWM"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "dht11",
-
-            "name": "DHT11",
-
-            "category": "Sensor",
-
-            "icon": "🌡",
-
-            "library": "#include <DHT.h>",
-
-            "keyword": "DHT",
-
-            "pins": [
-
-                {
-
-                    "name": "DATA",
-
-                    "type": "Digital"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "ultrasonic",
-
-            "name": "HC-SR04",
-
-            "category": "Sensor",
-
-            "icon": "📡",
-
-            "library": "#include <NewPing.h>",
-
-            "keyword": "NewPing",
-
-            "pins": [
-
-                {
-
-                    "name": "TRIG",
-
-                    "type": "Digital"
-
-                },
-
-                {
-
-                    "name": "ECHO",
-
-                    "type": "Digital"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "oled",
-
-            "name": "OLED SSD1306",
-
-            "category": "Display",
-
-            "icon": "🖥",
-
-            "library": "#include <Adafruit_SSD1306.h>",
-
-            "keyword": "display",
-
-            "pins": [
-
-                {
-
-                    "name": "SDA",
-
-                    "type": "I2C"
-
-                },
-
-                {
-
-                    "name": "SCL",
-
-                    "type": "I2C"
-
-                }
-
-            ]
-
-        },
-
-        {
-
-            "id": "relay",
-
-            "name": "Relay",
-
-            "category": "Output",
-
-            "icon": "🔌",
-
-            "library": null,
-
-            "keyword": "digitalWrite",
-
-            "pins": [
-
-                {
-
-                    "name": "IN",
-
-                    "type": "Digital"
-
-                }
-
-            ]
-
-        }
-
-    ]
+  "version": "2.0.0",
+  "scope": "core",
+  "description": "Generic hardware interfaces for the Universal IDE. Device-specific components live in optional hardware packs.",
+  "interfaces": [
+    {
+      "id": "digital-input",
+      "name": "Digital Input",
+      "category": "Interface",
+      "icon": "◉",
+      "pins": [{ "name": "Signal", "type": "DigitalInput" }]
+    },
+    {
+      "id": "digital-output",
+      "name": "Digital Output",
+      "category": "Interface",
+      "icon": "◌",
+      "pins": [{ "name": "Signal", "type": "DigitalOutput" }]
+    },
+    {
+      "id": "pwm-output",
+      "name": "PWM Output",
+      "category": "Interface",
+      "icon": "≈",
+      "pins": [{ "name": "Signal", "type": "PWM" }]
+    },
+    {
+      "id": "analog-input",
+      "name": "Analog Input",
+      "category": "Interface",
+      "icon": "∿",
+      "pins": [{ "name": "Signal", "type": "AnalogInput" }]
+    },
+    {
+      "id": "i2c-device",
+      "name": "I2C Device",
+      "category": "Bus",
+      "icon": "I²C",
+      "pins": [{ "name": "SDA", "type": "I2C" }, { "name": "SCL", "type": "I2C" }]
+    },
+    {
+      "id": "spi-device",
+      "name": "SPI Device",
+      "category": "Bus",
+      "icon": "SPI",
+      "pins": [
+        { "name": "MOSI", "type": "SPI" },
+        { "name": "MISO", "type": "SPI" },
+        { "name": "SCK", "type": "SPI" },
+        { "name": "CS", "type": "SPI" }
+      ]
+    },
+    {
+      "id": "uart-device",
+      "name": "UART Device",
+      "category": "Bus",
+      "icon": "UART",
+      "pins": [{ "name": "TX", "type": "UART" }, { "name": "RX", "type": "UART" }]
+    }
+  ]
 }
