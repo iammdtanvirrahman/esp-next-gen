@@ -1,8 +1,7 @@
 /*
  * ESP Next Gen - PC Brain Runtime
- *
- * Executes the virtual Arduino program on the laptop and mirrors hardware
- * actions to the connected ESP32. The PC remains the program brain.
+ * Executes the virtual Arduino program on the laptop and mirrors compatible
+ * hardware actions to ESP32.
  */
 export class BrainRuntime {
     constructor(network, terminal) {
@@ -16,6 +15,7 @@ export class BrainRuntime {
         this.virtualAnalog = new Map();
         this.telemetry = { distance: -1, obstacle: false, fine: 0, speed: 0 };
         this.randomSeedValue = Date.now();
+        this.loopIterations = 0;
     }
 
     setTelemetry(data = {}) {
@@ -25,89 +25,173 @@ export class BrainRuntime {
     createAPI() {
         return {
             pinMode: async (pin, mode) => {
-                this.virtualPins.set(Number(pin), { mode, value: this.virtualPins.get(Number(pin))?.value ?? false });
-                this.terminal.info(`BRAIN  virtual pinMode(${pin}, ${mode})`);
+                const p = Number(pin);
+                this.virtualPins.set(p, {
+                    mode: String(mode),
+                    value: this.virtualPins.get(p)?.value ?? false
+                });
+                this.terminal.info(`BRAIN  pinMode(${p}, ${mode})`);
+                this.network.sendJSON({ type: "pinMode", pin: p, mode: String(mode) });
             },
+
             digitalWrite: async (pin, state) => {
-                this.virtualPins.set(Number(pin), { ...this.virtualPins.get(Number(pin)), value: Boolean(state) });
-                this.terminal.info(`BRAIN  digitalWrite(${pin}, ${state ? "HIGH" : "LOW"}) → servant`);
-                this.network.digitalWrite(pin, state);
+                const p = Number(pin);
+                const value = Boolean(state);
+                this.virtualPins.set(p, {
+                    ...this.virtualPins.get(p),
+                    value,
+                    mode: this.virtualPins.get(p)?.mode || "OUTPUT"
+                });
+                this.terminal.info(`BRAIN  digitalWrite(${p}, ${value ? "HIGH" : "LOW"}) → servant`);
+                this.network.digitalWrite(p, value);
             },
-            analogWrite: async (pin, value) => {
-                const numeric = Math.max(0, Math.min(255, Number(value) || 0));
-                this.virtualAnalog.set(Number(pin), numeric);
-                this.terminal.info(`BRAIN  analogWrite(${pin}, ${numeric}) → servant`);
-                this.network.analogWrite(pin, numeric);
-            },
+
             digitalRead: async pin => {
-                const value = this.virtualPins.get(Number(pin))?.value ?? false;
-                this.terminal.info(`BRAIN  digitalRead(${pin}) -> ${value ? "HIGH" : "LOW"}`);
+                const p = Number(pin);
+                const value = this.virtualPins.get(p)?.value ?? false;
+                this.terminal.info(`BRAIN  digitalRead(${p}) -> ${value ? "HIGH" : "LOW"}`);
                 return value ? 1 : 0;
             },
+
+            analogWrite: async (pin, value) => {
+                const p = Number(pin);
+                const numeric = Math.max(0, Math.min(255, Number(value) || 0));
+                this.virtualAnalog.set(p, numeric);
+                this.terminal.info(`BRAIN  analogWrite(${p}, ${numeric}) → servant`);
+                this.network.analogWrite(p, numeric);
+            },
+
             analogRead: async pin => {
-                const value = this.virtualAnalog.get(Number(pin)) ?? 0;
-                this.terminal.info(`BRAIN  analogRead(${pin}) -> ${value}`);
+                const p = Number(pin);
+                const value = this.virtualAnalog.get(p) ?? 0;
+                this.terminal.info(`BRAIN  analogRead(${p}) -> ${value}`);
                 return value;
             },
+
             servo: async (pin, angle) => {
                 const numeric = Math.max(0, Math.min(180, Number(angle) || 0));
                 this.terminal.info(`BRAIN  servo(${pin}, ${numeric}) → servant`);
-                this.network.servo(pin, numeric);
+                this.network.servo(Number(pin), numeric);
             },
+
             move: async (direction, speed = 0) => {
                 const numeric = Math.max(0, Math.min(255, Number(speed) || 0));
                 this.terminal.info(`BRAIN  move(${direction}, ${numeric}) → servant`);
-                this.network.sendMove(direction, numeric);
+                this.network.sendMove(String(direction), numeric);
             },
+
             stop: async () => {
                 this.terminal.info("BRAIN  stop() → servant");
                 this.network.stopMotors();
             },
+
             delay: async ms => {
                 const duration = Math.max(0, Math.min(60000, Number(ms) || 0));
                 this.terminal.info(`BRAIN  delay(${duration}ms)`);
                 await new Promise(resolve => setTimeout(resolve, duration));
             },
+
             delayMicroseconds: us => {
-                const duration = Math.max(0, Math.min(50, Number(us) || 0));
+                const duration = Math.max(0, Math.min(50000, Number(us) || 0));
+                if (duration <= 0) return;
                 const started = performance.now();
-                while (performance.now() - started < duration / 1000) {}
+                const maxMs = Math.min(duration / 1000, 5);
+                while (performance.now() - started < maxMs) {
+                    // Intentional tiny virtual busy wait.
+                }
             },
+
+            yield: async () => {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            },
+
             millis: () => Math.max(0, Math.floor(performance.now() - this.startedAt)),
             micros: () => Math.max(0, Math.floor((performance.now() - this.startedAt) * 1000)),
-            constrain: (value, low, high) => Math.min(Number(high), Math.max(Number(low), Number(value))),
-            map: (value, fromLow, fromHigh, toLow, toHigh) => {
-                const input = Number(value);
-                const denominator = Number(fromHigh) - Number(fromLow);
-                if (denominator === 0) return Number(toLow);
-                return (input - Number(fromLow)) * (Number(toHigh) - Number(toLow)) / denominator + Number(toLow);
+
+            constrain: (value, low, high) => {
+                const n = Number(value);
+                return Math.min(Math.max(n, Number(low)), Number(high));
             },
+
+            map: (value, fromLow, fromHigh, toLow, toHigh) => {
+                const x = Number(value);
+                const a = Number(fromLow);
+                const b = Number(fromHigh);
+                const c = Number(toLow);
+                const d = Number(toHigh);
+                if (b === a) return c;
+                return ((x - a) * (d - c)) / (b - a) + c;
+            },
+
             abs: value => Math.abs(Number(value)),
             min: (...values) => Math.min(...values.map(Number)),
             max: (...values) => Math.max(...values.map(Number)),
+
             randomSeed: seed => {
                 this.randomSeedValue = Number(seed) || 1;
+                this.terminal.info(`BRAIN  randomSeed(${this.randomSeedValue})`);
             },
-            random: (min, max) => {
-                this.randomSeedValue = (this.randomSeedValue * 1664525 + 1013904223) >>> 0;
-                const value = this.randomSeedValue / 4294967296;
-                if (max === undefined) return Math.floor(value * Number(min));
-                return Math.floor(value * (Number(max) - Number(min))) + Number(min);
+
+            random: (minOrMax, maybeMax) => {
+                let min = 0;
+                let max = Number(minOrMax);
+                if (maybeMax !== undefined) {
+                    min = Number(minOrMax);
+                    max = Number(maybeMax);
+                }
+                if (!Number.isFinite(min)) min = 0;
+                if (!Number.isFinite(max)) max = 1;
+                if (max <= min) return min;
+                this.randomSeedValue = (1664525 * this.randomSeedValue + 1013904223) >>> 0;
+                const unit = this.randomSeedValue / 4294967296;
+                return Math.floor(min + unit * (max - min));
             },
-            yield: async () => new Promise(resolve => setTimeout(resolve, 0)),
-            serialBegin: async baud => this.terminal.info(`SERIAL  begin(${baud})`),
-            serialPrint: async value => this.terminal.write(`SERIAL  ${String(value)}`, "info"),
-            serialPrintln: async value => this.terminal.write(`SERIAL  ${String(value)}`, "info"),
-            serialPrintf: async (...args) => this.terminal.write(`SERIAL  ${args.map(String).join(" ")}`, "info"),
-            telemetry: () => ({ ...this.telemetry }),
-            distanceCm: () => Number(this.telemetry.distance ?? -1),
-            obstacleDetected: () => Boolean(this.telemetry.obstacle),
-            fineAmount: () => Number(this.telemetry.fine ?? 0)
+
+            String: value => String(value),
+            Number: value => Number(value),
+            Boolean: value => Boolean(value),
+
+            serialBegin: async baud => {
+                this.terminal.info(`SERIAL  begin(${Number(baud)})`);
+            },
+
+            serialPrint: async value => {
+                this.terminal.write(`SERIAL  ${String(value)}`, "info");
+            },
+
+            serialPrintln: async value => {
+                this.terminal.write(`SERIAL  ${String(value)}`, "info");
+            },
+
+            serialPrintf: async (...args) => {
+                this.terminal.write(`SERIAL  ${args.map(String).join(" ")}`, "info");
+            },
+
+            distanceCm: () => {
+                const value = Number(this.telemetry.distance);
+                this.terminal.info(`SENSOR  distanceCm() -> ${Number.isFinite(value) ? value : -1}`);
+                return Number.isFinite(value) ? value : -1;
+            },
+
+            obstacleDetected: () => {
+                const value = Boolean(this.telemetry.obstacle);
+                this.terminal.info(`SENSOR  obstacleDetected() -> ${value ? "true" : "false"}`);
+                return value;
+            },
+
+            fineAmount: () => {
+                const value = Number(this.telemetry.fine) || 0;
+                this.terminal.info(`SENSOR  fineAmount() -> $${value}`);
+                return value;
+            },
+
+            telemetry: () => ({ ...this.telemetry })
         };
     }
 
     async run(compiledProgram) {
         this.stop(false);
+
         if (!compiledProgram?.ok || typeof compiledProgram.factory !== "function") {
             this.terminal.error("BRAIN  cannot run: no valid compiled program.");
             return false;
@@ -116,13 +200,20 @@ export class BrainRuntime {
         this.program = compiledProgram;
         this.running = true;
         this.startedAt = performance.now();
+        this.loopIterations = 0;
+        this.virtualPins.clear();
+        this.virtualAnalog.clear();
+
         this.terminal.success("BRAIN  virtual program started");
-        this.terminal.info("BRAIN  all compatible code executes on the PC; hardware actions mirror to ESP32");
+        this.terminal.info("BRAIN  compatible code executes on the PC; hardware actions mirror to ESP32");
 
         try {
             const api = this.createAPI();
             const program = await compiledProgram.factory(api);
-            if (!program?.setup || !program?.loop) throw new Error("Compiled program did not expose setup() and loop().");
+
+            if (!program?.setup || !program?.loop) {
+                throw new Error("Compiled program did not expose setup() and loop().");
+            }
 
             this.terminal.info("BRAIN  setup() begin");
             await program.setup();
@@ -140,11 +231,16 @@ export class BrainRuntime {
     }
 
     async runLoop(loopFunction) {
-        let iterations = 0;
         while (this.running) {
-            iterations += 1;
-            if (iterations <= 5 || iterations % 25 === 0) this.terminal.info(`BRAIN  loop() iteration ${iterations}`);
+            this.loopIterations += 1;
+
+            if (this.loopIterations <= 5 || this.loopIterations % 25 === 0) {
+                this.terminal.info(`BRAIN  loop() iteration ${this.loopIterations}`);
+            }
+
             await loopFunction();
+
+            // Prevent a zero-delay infinite loop from freezing the UI.
             await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
@@ -155,6 +251,8 @@ export class BrainRuntime {
         this.program = null;
         this.loopPromise = null;
         this.network.stopMotors();
-        if (log && wasRunning) this.terminal.warning("BRAIN  program stopped; motors stopped");
+        if (log && wasRunning) {
+            this.terminal.warning("BRAIN  program stopped; motors stopped");
+        }
     }
 }
