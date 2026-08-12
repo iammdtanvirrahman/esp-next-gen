@@ -9,6 +9,7 @@ export class BrainRuntime {
         this.running = false;
         this.program = null;
         this.loopTimer = null;
+        this.pinModes = new Map();
     }
 
     async run(program) {
@@ -38,8 +39,8 @@ export class BrainRuntime {
     async executeInstruction(i) {
         switch (i.op) {
             case "pinMode":
-                this.terminal.info(`Brain → pinMode(${i.pin}, ${i.mode})`);
-                this.network.sendJSON({ type: "pinMode", pin: i.pin, mode: i.mode });
+                this.pinModes.set(i.pin, i.mode);
+                this.terminal.info(`Brain virtual pinMode(${i.pin}, ${i.mode})`);
                 break;
             case "digitalWrite":
                 this.terminal.info(`Brain → digitalWrite(${i.pin}, ${i.state ? "HIGH" : "LOW"})`);
@@ -58,10 +59,10 @@ export class BrainRuntime {
                 this.network.sendMove(i.direction, i.speed);
                 break;
             case "serial":
-                this.terminal[i.newline ? "info" : "write"](i.value, "info");
+                this.terminal.info(i.value);
                 break;
             case "delay":
-                await new Promise(resolve => setTimeout(resolve, Math.min(i.ms, 10000)));
+                await new Promise(resolve => setTimeout(resolve, Math.min(Math.max(i.ms, 0), 10000)));
                 break;
             default:
                 this.terminal.warning(`Brain skipped unsupported op: ${i.op}`);
