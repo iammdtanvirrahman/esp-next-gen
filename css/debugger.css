@@ -1,0 +1,65 @@
+.debugger-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.debugger-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.debugger-toolbar button {
+  padding: 6px 9px;
+  font-size: .72rem;
+}
+
+.debugger-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 7px;
+}
+
+.debugger-item {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: rgba(255,255,255,.02);
+}
+
+.debugger-item span {
+  display:block;
+  color: var(--text-muted);
+  font-size:.68rem;
+  margin-bottom:3px;
+}
+
+.debugger-item strong {
+  font-size:.78rem;
+  word-break:break-word;
+}
+
+.debugger-watch {
+  display:flex;
+  gap:6px;
+}
+
+.debugger-watch input {
+  min-width:0;
+  flex:1;
+  background:rgba(0,0,0,.12);
+  color:var(--text-primary);
+  border:1px solid var(--border-color);
+  border-radius:8px;
+  padding:7px 8px;
+}
+
+.debugger-breakpoint-dot {
+  color:#ff5f73;
+  font-size:11px;
+  line-height:1;
+}
+
+.CodeMirror-gutter-elt {
+  cursor:pointer;
+}
