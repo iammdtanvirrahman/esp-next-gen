@@ -14,7 +14,8 @@ export class BrainRuntime {
         this.startedAt = 0;
         this.virtualPins = new Map();
         this.virtualAnalog = new Map();
-        this.telemetry = { distance: -1, obstacle: false, fine: 0 };
+        this.telemetry = { distance: -1, obstacle: false, fine: 0, speed: 0 };
+        this.randomSeedValue = Date.now();
     }
 
     setTelemetry(data = {}) {
@@ -71,17 +72,38 @@ export class BrainRuntime {
             delayMicroseconds: us => {
                 const duration = Math.max(0, Math.min(50, Number(us) || 0));
                 const started = performance.now();
-                while (performance.now() - started < duration / 1000) {
-                    // Very short cooperative virtual delay.
-                }
+                while (performance.now() - started < duration / 1000) {}
             },
             millis: () => Math.max(0, Math.floor(performance.now() - this.startedAt)),
             micros: () => Math.max(0, Math.floor((performance.now() - this.startedAt) * 1000)),
+            constrain: (value, low, high) => Math.min(Number(high), Math.max(Number(low), Number(value))),
+            map: (value, fromLow, fromHigh, toLow, toHigh) => {
+                const input = Number(value);
+                const denominator = Number(fromHigh) - Number(fromLow);
+                if (denominator === 0) return Number(toLow);
+                return (input - Number(fromLow)) * (Number(toHigh) - Number(toLow)) / denominator + Number(toLow);
+            },
+            abs: value => Math.abs(Number(value)),
+            min: (...values) => Math.min(...values.map(Number)),
+            max: (...values) => Math.max(...values.map(Number)),
+            randomSeed: seed => {
+                this.randomSeedValue = Number(seed) || 1;
+            },
+            random: (min, max) => {
+                this.randomSeedValue = (this.randomSeedValue * 1664525 + 1013904223) >>> 0;
+                const value = this.randomSeedValue / 4294967296;
+                if (max === undefined) return Math.floor(value * Number(min));
+                return Math.floor(value * (Number(max) - Number(min))) + Number(min);
+            },
+            yield: async () => new Promise(resolve => setTimeout(resolve, 0)),
             serialBegin: async baud => this.terminal.info(`SERIAL  begin(${baud})`),
             serialPrint: async value => this.terminal.write(`SERIAL  ${String(value)}`, "info"),
             serialPrintln: async value => this.terminal.write(`SERIAL  ${String(value)}`, "info"),
             serialPrintf: async (...args) => this.terminal.write(`SERIAL  ${args.map(String).join(" ")}`, "info"),
-            telemetry: () => ({ ...this.telemetry })
+            telemetry: () => ({ ...this.telemetry }),
+            distanceCm: () => Number(this.telemetry.distance ?? -1),
+            obstacleDetected: () => Boolean(this.telemetry.obstacle),
+            fineAmount: () => Number(this.telemetry.fine ?? 0)
         };
     }
 
@@ -95,16 +117,13 @@ export class BrainRuntime {
         this.program = compiledProgram;
         this.running = true;
         this.startedAt = performance.now();
-
         this.terminal.success("BRAIN  virtual program started");
-        this.terminal.info("BRAIN  hardware actions will be mirrored to ESP32 when connected");
+        this.terminal.info("BRAIN  all compatible code executes on the PC; hardware actions mirror to ESP32");
 
         try {
             const api = this.createAPI();
             const program = await compiledProgram.factory(api);
-            if (!program?.setup || !program?.loop) {
-                throw new Error("Compiled program did not expose setup() and loop().");
-            }
+            if (!program?.setup || !program?.loop) throw new Error("Compiled program did not expose setup() and loop().");
 
             this.terminal.info("BRAIN  setup() begin");
             await program.setup();
@@ -125,9 +144,7 @@ export class BrainRuntime {
         let iterations = 0;
         while (this.running) {
             iterations += 1;
-            if (iterations <= 5 || iterations % 25 === 0) {
-                this.terminal.info(`BRAIN  loop() iteration ${iterations}`);
-            }
+            if (iterations <= 5 || iterations % 25 === 0) this.terminal.info(`BRAIN  loop() iteration ${iterations}`);
             await loopFunction();
             await new Promise(resolve => setTimeout(resolve, 0));
         }
