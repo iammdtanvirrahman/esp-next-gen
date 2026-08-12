@@ -8,7 +8,7 @@ import { HardwareWorkspace } from "./hardware/workspace.js";
 import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1003";
 import { BrainRuntime } from "./runtime/brain.js";
 
 class ESPNextGenIDE {
@@ -20,6 +20,7 @@ class ESPNextGenIDE {
         this.editor = new EditorManager();
         this.explorer = new Explorer();
         this.hardware = new HardwareWorkspace();
+        this.fineSystem = new FineSystem(this.network, this.terminal);
         this.network = new NetworkManager();
         this.terminal = new Terminal();
         this.compiler = new VirtualCompiler();
