@@ -1,33 +1,32 @@
 /*
  * ESP Next Gen - ESP32 firmware
- * Protocol compatible with the web IDE NetworkManager.
+ * WebSocket protocol: 1.0
  *
- * Required Arduino libraries:
- *   - WiFi (ESP32 core)
+ * Libraries:
+ *   - WiFi (ESP32 Arduino core)
  *   - WebSocketsServer
+ *   - ESP32Servo (only required for servo commands)
  *
- * Optional hardware defaults match the user's ESP32 robot wiring:
+ * IMPORTANT:
+ * The old project mapping used GPIO 18/5 for both motors and ultrasonic.
+ * That is a hardware conflict. This firmware uses conflict-free defaults:
  *   L298N: IN1=18 IN2=19 IN3=4 IN4=5 ENA=13 ENB=14
- *   Ultrasonic: TRIG=5 ECHO=18
+ *   HC-SR04: TRIG=32 ECHO=33
  *   LEDs: GREEN=15 RED=2
- *   TM1637: CLK=22 DIO=21
- *
- * IMPORTANT: the ultrasonic and motor defaults above intentionally preserve
- * the project's previously-used mapping. Check for pin conflicts before use.
+ *   Change the constants below to match your actual wiring.
  */
 
 #include <WiFi.h>
 #include <WebSocketsServer.h>
+#include <ESP32Servo.h>
 
-// ------------------------- Wi-Fi -------------------------
 const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// ------------------------- WebSocket ----------------------
 constexpr uint16_t WS_PORT = 81;
 WebSocketsServer webSocket(WS_PORT);
 
-// ------------------------- Motor driver -------------------
+// Motor driver
 constexpr uint8_t IN1 = 18;
 constexpr uint8_t IN2 = 19;
 constexpr uint8_t IN3 = 4;
@@ -35,30 +34,37 @@ constexpr uint8_t IN4 = 5;
 constexpr uint8_t ENA = 13;
 constexpr uint8_t ENB = 14;
 
-// ------------------------- Indicators ---------------------
+// Indicators
 constexpr uint8_t GREEN_LED = 15;
 constexpr uint8_t RED_LED = 2;
 
-// ------------------------- Ultrasonic ----------------------
-constexpr uint8_t TRIG_PIN = 5;
-constexpr uint8_t ECHO_PIN = 18;
+// Ultrasonic: intentionally conflict-free defaults
+constexpr uint8_t TRIG_PIN = 32;
+constexpr uint8_t ECHO_PIN = 33;
 constexpr float DISTANCE_THRESHOLD_CM = 15.0f;
 
-// ------------------------- Runtime ------------------------
+// Runtime
 int motorSpeed = 120;
 unsigned long lastClientActivity = 0;
 unsigned long lastTelemetry = 0;
-const unsigned long COMMAND_TIMEOUT_MS = 1500;
-const unsigned long TELEMETRY_INTERVAL_MS = 1000;
+constexpr unsigned long COMMAND_TIMEOUT_MS = 1500;
+constexpr unsigned long TELEMETRY_INTERVAL_MS = 1000;
+
+Servo activeServo;
+int activeServoPin = -1;
+
+void sendJSON(uint8_t client, const String& payload) {
+  webSocket.sendTXT(client, payload);
+}
 
 void setMotor(int left, int right) {
   left = constrain(left, -255, 255);
   right = constrain(right, -255, 255);
 
-  digitalWrite(IN1, left > 0);
-  digitalWrite(IN2, left < 0);
-  digitalWrite(IN3, right > 0);
-  digitalWrite(IN4, right < 0);
+  digitalWrite(IN1, left > 0 ? HIGH : LOW);
+  digitalWrite(IN2, left < 0 ? HIGH : LOW);
+  digitalWrite(IN3, right > 0 ? HIGH : LOW);
+  digitalWrite(IN4, right < 0 ? HIGH : LOW);
 
   analogWrite(ENA, abs(left));
   analogWrite(ENB, abs(right));
@@ -75,18 +81,13 @@ float readDistanceCm() {
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
-  unsigned long duration = pulseIn(ECHO_PIN, HIGH, 30000UL);
+  const unsigned long duration = pulseIn(ECHO_PIN, HIGH, 30000UL);
   if (duration == 0) return -1.0f;
-
   return (duration * 0.0343f) / 2.0f;
 }
 
-void sendJSON(uint8_t client, const String& payload) {
-  webSocket.sendTXT(client, payload);
-}
-
 void broadcastStatus() {
-  String json = "{\"type\":\"status\",\"connected\":true,\"ip\":\"";
+  String json = "{\"type\":\"status\",\"device\":\"ESP Next Gen\",\"ip\":\"";
   json += WiFi.localIP().toString();
   json += "\",\"speed\":";
   json += motorSpeed;
@@ -95,10 +96,11 @@ void broadcastStatus() {
 }
 
 void broadcastTelemetry() {
-  float distance = readDistanceCm();
+  const float distance = readDistanceCm();
+  const bool obstacle = distance > 0 && distance <= DISTANCE_THRESHOLD_CM;
 
-  bool obstacle = distance > 0 && distance <= DISTANCE_THRESHOLD_CM;
   digitalWrite(GREEN_LED, obstacle ? HIGH : LOW);
+  digitalWrite(RED_LED, LOW);
 
   String json = "{\"type\":\"telemetry\",\"distance\":";
   json += String(distance, 1);
@@ -112,107 +114,63 @@ void broadcastTelemetry() {
 }
 
 void handleJoystick(uint8_t client, float x, float y) {
-  // x/y range expected by the frontend is roughly -100..100.
   x = constrain(x, -100.0f, 100.0f);
   y = constrain(y, -100.0f, 100.0f);
 
-  float forward = y / 100.0f;
-  float turn = x / 100.0f;
+  const float forward = y / 100.0f;
+  const float turn = x / 100.0f;
+  const int left = (int)((forward + turn) * motorSpeed);
+  const int right = (int)((forward - turn) * motorSpeed);
 
-  // Differential drive mix.
-  float left = (forward + turn) * motorSpeed;
-  float right = (forward - turn) * motorSpeed;
-
-  setMotor((int)left, (int)right);
+  setMotor(left, right);
   lastClientActivity = millis();
-
   sendJSON(client, "{\"type\":\"ack\",\"command\":\"joystick\"}");
+}
+
+void handleMove(uint8_t client, const String& direction, int requestedSpeed) {
+  if (requestedSpeed > 0) {
+    motorSpeed = constrain(requestedSpeed, 0, 255);
+  }
+
+  if (direction == "forward") setMotor(motorSpeed, motorSpeed);
+  else if (direction == "backward") setMotor(-motorSpeed, -motorSpeed);
+  else if (direction == "left") setMotor(-motorSpeed, motorSpeed);
+  else if (direction == "right") setMotor(motorSpeed, -motorSpeed);
+  else stopMotors();
+
+  lastClientActivity = millis();
+  sendJSON(client, "{\"type\":\"ack\",\"command\":\"move\"}");
+}
+
+void handleServo(uint8_t client, int pin, int angle) {
+  angle = constrain(angle, 0, 180);
+
+  if (activeServoPin != pin) {
+    if (activeServoPin >= 0) activeServo.detach();
+    activeServoPin = pin;
+    activeServo.attach(activeServoPin);
+  }
+
+  activeServo.write(angle);
+  sendJSON(client, "{\"type\":\"ack\",\"command\":\"servo\"}");
+}
+
+void handleDigitalWriteCommand(uint8_t client, int pin, bool state) {
+  pinMode(pin, OUTPUT);
+  digitalWrite(pin, state ? HIGH : LOW);
+  sendJSON(client, "{\"type\":\"ack\",\"command\":\"digitalWrite\"}");
+}
+
+void handleAnalogWriteCommand(uint8_t client, int pin, int value) {
+  pinMode(pin, OUTPUT);
+  analogWrite(pin, constrain(value, 0, 255));
+  sendJSON(client, "{\"type\":\"ack\",\"command\":\"analogWrite\"}");
 }
 
 void handleText(uint8_t client, const String& message) {
   lastClientActivity = millis();
 
-  // JSON protocol from the web IDE.
-  if (message.startsWith("{\"")) {
-    if (message.indexOf("\"type\":\"joystick\"") >= 0) {
-      int xIndex = message.indexOf("\"x\"");
-      int yIndex = message.indexOf("\"y\"");
-
-      if (xIndex >= 0 && yIndex >= 0) {
-        float x = message.substring(message.indexOf(':', xIndex) + 1, message.indexOf(',', xIndex)).toFloat();
-        int yEnd = message.indexOf('}', yIndex);
-        if (yEnd < 0) yEnd = message.length();
-        float y = message.substring(message.indexOf(':', yIndex) + 1, yEnd).toFloat();
-        handleJoystick(client, x, y);
-        return;
-      }
-    }
-
-    if (message.indexOf("\"type\":\"move\"") >= 0) {
-      if (message.indexOf("\"direction\":\"forward\"") >= 0) setMotor(motorSpeed, motorSpeed);
-      else if (message.indexOf("\"direction\":\"backward\"") >= 0) setMotor(-motorSpeed, -motorSpeed);
-      else if (message.indexOf("\"direction\":\"left\"") >= 0) setMotor(-motorSpeed, motorSpeed);
-      else if (message.indexOf("\"direction\":\"right\"") >= 0) setMotor(motorSpeed, -motorSpeed);
-      else stopMotors();
-
-      sendJSON(client, "{\"type\":\"ack\",\"command\":\"move\"}");
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"stop\"") >= 0) {
-      stopMotors();
-      sendJSON(client, "{\"type\":\"ack\",\"command\":\"stop\"}");
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"speed\"") >= 0) {
-      int speedPos = message.indexOf("\"value\"");
-      if (speedPos >= 0) {
-        motorSpeed = constrain(message.substring(message.indexOf(':', speedPos) + 1).toInt(), 0, 255);
-        broadcastStatus();
-      }
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"digitalWrite\"") >= 0) {
-      int pinPos = message.indexOf("\"pin\"");
-      int statePos = message.indexOf("\"state\"");
-      if (pinPos >= 0 && statePos >= 0) {
-        int pin = message.substring(message.indexOf(':', pinPos) + 1, message.indexOf(',', pinPos)).toInt();
-        int state = message.substring(message.indexOf(':', statePos) + 1).toInt();
-        pinMode(pin, OUTPUT);
-        digitalWrite(pin, state ? HIGH : LOW);
-      }
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"analogWrite\"") >= 0) {
-      int pinPos = message.indexOf("\"pin\"");
-      int valuePos = message.indexOf("\"value\"");
-      if (pinPos >= 0 && valuePos >= 0) {
-        int pin = message.substring(message.indexOf(':', pinPos) + 1, message.indexOf(',', pinPos)).toInt();
-        int value = message.substring(message.indexOf(':', valuePos) + 1).toInt();
-        pinMode(pin, OUTPUT);
-        analogWrite(pin, constrain(value, 0, 255));
-      }
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"ping\"") >= 0) {
-      sendJSON(client, "{\"type\":\"pong\"}");
-      return;
-    }
-
-    if (message.indexOf("\"type\":\"run\"") >= 0) {
-      sendJSON(client, "{\"type\":\"run\",\"status\":\"accepted\"}");
-      return;
-    }
-
-    sendJSON(client, "{\"type\":\"error\",\"message\":\"Unknown JSON command\"}");
-    return;
-  }
-
-  // Legacy string protocol kept for compatibility with earlier UI code.
+  // Legacy commands retained for compatibility.
   if (message == "PING") {
     sendJSON(client, "PONG");
     return;
@@ -224,38 +182,139 @@ void handleText(uint8_t client, const String& message) {
   }
 
   if (message.startsWith("J_TX:")) {
-    int comma = message.indexOf(',');
+    const int comma = message.indexOf(',');
     if (comma > 5) {
-      float x = message.substring(5, comma).toFloat();
-      float y = message.substring(comma + 1).toFloat();
-      handleJoystick(client, x, y);
+      handleJoystick(client, message.substring(5, comma).toFloat(), message.substring(comma + 1).toFloat());
     }
     return;
   }
 
   if (message.startsWith("DW:")) {
-    int first = message.indexOf(':');
-    int second = message.indexOf(':', first + 1);
-    if (second > 0) {
-      int pin = message.substring(first + 1, second).toInt();
-      int state = message.substring(second + 1).toInt();
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, state ? HIGH : LOW);
+    const int first = message.indexOf(':');
+    const int second = message.indexOf(':', first + 1);
+    if (second > first) {
+      handleDigitalWriteCommand(client, message.substring(first + 1, second).toInt(), message.substring(second + 1).toInt() != 0);
     }
     return;
   }
 
   if (message.startsWith("AW:")) {
-    int first = message.indexOf(':');
-    int second = message.indexOf(':', first + 1);
-    if (second > 0) {
-      int pin = message.substring(first + 1, second).toInt();
-      int value = message.substring(second + 1).toInt();
-      pinMode(pin, OUTPUT);
-      analogWrite(pin, constrain(value, 0, 255));
+    const int first = message.indexOf(':');
+    const int second = message.indexOf(':', first + 1);
+    if (second > first) {
+      handleAnalogWriteCommand(client, message.substring(first + 1, second).toInt(), message.substring(second + 1).toInt());
     }
     return;
   }
+
+  if (!message.startsWith("{")) return;
+
+  if (message.indexOf("\"type\":\"ping\"") >= 0) {
+    sendJSON(client, "{\"type\":\"pong\"}");
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"stop\"") >= 0) {
+    stopMotors();
+    sendJSON(client, "{\"type\":\"ack\",\"command\":\"stop\"}");
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"joystick\"") >= 0) {
+    const int xIndex = message.indexOf("\"x\"");
+    const int yIndex = message.indexOf("\"y\"");
+    if (xIndex >= 0 && yIndex >= 0) {
+      const int xColon = message.indexOf(':', xIndex);
+      const int xComma = message.indexOf(',', xColon);
+      const int yColon = message.indexOf(':', yIndex);
+      const int yEnd = message.indexOf('}', yColon);
+      const float x = message.substring(xColon + 1, xComma).toFloat();
+      const float y = message.substring(yColon + 1, yEnd > 0 ? yEnd : message.length()).toFloat();
+      handleJoystick(client, x, y);
+    }
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"move\"") >= 0) {
+    String direction = "stop";
+    if (message.indexOf("\"direction\":\"forward\"") >= 0) direction = "forward";
+    else if (message.indexOf("\"direction\":\"backward\"") >= 0) direction = "backward";
+    else if (message.indexOf("\"direction\":\"left\"") >= 0) direction = "left";
+    else if (message.indexOf("\"direction\":\"right\"") >= 0) direction = "right";
+
+    int requestedSpeed = 0;
+    const int speedIndex = message.indexOf("\"speed\"");
+    if (speedIndex >= 0) {
+      const int colon = message.indexOf(':', speedIndex);
+      requestedSpeed = message.substring(colon + 1).toInt();
+    }
+
+    handleMove(client, direction, requestedSpeed);
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"speed\"") >= 0) {
+    const int valueIndex = message.indexOf("\"value\"");
+    if (valueIndex >= 0) {
+      const int colon = message.indexOf(':', valueIndex);
+      motorSpeed = constrain(message.substring(colon + 1).toInt(), 0, 255);
+      broadcastStatus();
+    }
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"digitalWrite\"") >= 0) {
+    const int pinIndex = message.indexOf("\"pin\"");
+    const int stateIndex = message.indexOf("\"state\"");
+    if (pinIndex >= 0 && stateIndex >= 0) {
+      const int pinColon = message.indexOf(':', pinIndex);
+      const int pinComma = message.indexOf(',', pinColon);
+      const int stateColon = message.indexOf(':', stateIndex);
+      const int stateEnd = message.indexOf('}', stateColon);
+      handleDigitalWriteCommand(client,
+        message.substring(pinColon + 1, pinComma).toInt(),
+        message.substring(stateColon + 1, stateEnd > 0 ? stateEnd : message.length()).indexOf("true") >= 0 ||
+        message.substring(stateColon + 1, stateEnd > 0 ? stateEnd : message.length()).toInt() != 0);
+    }
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"analogWrite\"") >= 0) {
+    const int pinIndex = message.indexOf("\"pin\"");
+    const int valueIndex = message.indexOf("\"value\"");
+    if (pinIndex >= 0 && valueIndex >= 0) {
+      const int pinColon = message.indexOf(':', pinIndex);
+      const int pinComma = message.indexOf(',', pinColon);
+      const int valueColon = message.indexOf(':', valueIndex);
+      const int valueEnd = message.indexOf('}', valueColon);
+      handleAnalogWriteCommand(client,
+        message.substring(pinColon + 1, pinComma).toInt(),
+        message.substring(valueColon + 1, valueEnd > 0 ? valueEnd : message.length()).toInt());
+    }
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"servo\"") >= 0) {
+    const int pinIndex = message.indexOf("\"pin\"");
+    const int angleIndex = message.indexOf("\"angle\"");
+    if (pinIndex >= 0 && angleIndex >= 0) {
+      const int pinColon = message.indexOf(':', pinIndex);
+      const int pinComma = message.indexOf(',', pinColon);
+      const int angleColon = message.indexOf(':', angleIndex);
+      const int angleEnd = message.indexOf('}', angleColon);
+      handleServo(client,
+        message.substring(pinColon + 1, pinComma).toInt(),
+        message.substring(angleColon + 1, angleEnd > 0 ? angleEnd : message.length()).toInt());
+    }
+    return;
+  }
+
+  if (message.indexOf("\"type\":\"run\"") >= 0) {
+    sendJSON(client, "{\"type\":\"run\",\"status\":\"accepted\"}");
+    return;
+  }
+
+  sendJSON(client, "{\"type\":\"error\",\"message\":\"Unknown command\"}");
 }
 
 void webSocketEvent(uint8_t client, WStype_t type, uint8_t* payload, size_t length) {
@@ -263,7 +322,7 @@ void webSocketEvent(uint8_t client, WStype_t type, uint8_t* payload, size_t leng
     case WStype_CONNECTED:
       lastClientActivity = millis();
       sendJSON(client, "{\"type\":\"hello\",\"device\":\"ESP Next Gen\",\"protocol\":\"1.0\"}");
-      broadcastStatus();
+      sendJSON(client, String("{\"type\":\"status\",\"ip\":\"") + WiFi.localIP().toString() + "\",\"speed\":" + motorSpeed + "}");
       break;
 
     case WStype_TEXT:
@@ -284,7 +343,7 @@ void connectWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting to Wi-Fi");
-  unsigned long started = millis();
+  const unsigned long started = millis();
 
   while (WiFi.status() != WL_CONNECTED && millis() - started < 20000UL) {
     delay(500);
@@ -320,7 +379,6 @@ void setup() {
   stopMotors();
 
   connectWiFi();
-
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
 
@@ -336,7 +394,6 @@ void loop() {
     broadcastTelemetry();
   }
 
-  // Safety stop if browser/network connection disappears.
   if (millis() - lastClientActivity > COMMAND_TIMEOUT_MS) {
     stopMotors();
   }
