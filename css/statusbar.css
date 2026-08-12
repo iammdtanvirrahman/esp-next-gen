@@ -1,0 +1,41 @@
+/* ==========================================================
+   Status Bar
+   ========================================================== */
+
+.statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(9, 13, 24, 0.92);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+}
+
+.statusbar span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-connected {
+    color: #7ef0c6;
+}
+
+.status-running {
+    color: #ffd166;
+}
+
+.status-error {
+    color: #ff7b90;
+}
+
+@media (max-width: 720px) {
+    .statusbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
