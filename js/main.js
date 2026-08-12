@@ -1,6 +1,6 @@
 /**
  * ==========================================================
- * Atomic IDE
+ * ESP Next Gen IDE
  * Main Entry Point
  * ==========================================================
  */
@@ -15,109 +15,111 @@ import { HardwareWorkspace } from "./hardware/workspace.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
 
-/**
- * Main Application
- */
-
-class AtomicIDE {
+class ESPNextGenIDE {
 
     constructor() {
 
         this.state = new AppState();
-
         this.logger = new Logger();
-
         this.layout = new LayoutManager();
-
         this.theme = new ThemeManager();
-
         this.editor = new EditorManager();
-
         this.explorer = new Explorer();
-
         this.hardware = new HardwareWorkspace();
-
         this.network = new NetworkManager();
-
         this.terminal = new Terminal();
 
     }
 
-    /**
-     * Initialize
-     */
-
     async initialize() {
 
-        this.logger.info("Starting Atomic IDE...");
+        this.logger.info("Starting ESP Next Gen IDE...");
 
-        await this.theme.initialize();
+        try {
 
-        await this.layout.initialize();
+            await this.theme.initialize();
+            await this.layout.initialize();
+            await this.editor.initialize();
+            await this.explorer.initialize();
+            await this.hardware.initialize();
+            await this.network.initialize();
+            await this.terminal.initialize();
 
-        await this.editor.initialize();
+            this.registerEvents();
+            this.seedDefaultWorkspace();
 
-        await this.explorer.initialize();
+            this.logger.success("ESP Next Gen IDE Ready");
 
-        await this.hardware.initialize();
+        } catch (error) {
 
-        await this.network.initialize();
+            console.error(error);
+            this.logger.error(`Startup failed: ${error.message}`);
 
-        await this.terminal.initialize();
+            const consoleOutput = document.getElementById("consoleOutput");
 
-        this.registerEvents();
+            if (consoleOutput) {
+                consoleOutput.innerHTML = `<div class="console-line error">Startup failed: ${error.message}</div>`;
+            }
 
-        this.logger.success("Atomic IDE Ready");
+        }
 
     }
-
-    /**
-     * Global Events
-     */
 
     registerEvents() {
 
         window.addEventListener("resize", () => {
-
             this.layout.resize();
-
         });
 
-        window.addEventListener("keydown", e => {
-
-            this.keyboardShortcuts(e);
-
+        window.addEventListener("keydown", event => {
+            this.keyboardShortcuts(event);
         });
 
     }
 
-    /**
-     * Keyboard Shortcuts
-     */
+    seedDefaultWorkspace() {
+
+        const connectionStatus = document.getElementById("connectionStatus");
+        const compileStatus = document.getElementById("compileStatus");
+
+        if (connectionStatus) {
+            connectionStatus.textContent = "Disconnected";
+        }
+
+        if (compileStatus) {
+            compileStatus.textContent = "Ready";
+        }
+
+        if (this.terminal?.write) {
+            this.terminal.write("ESP32 workspace initialized", "success");
+            this.terminal.write("Press F5 to simulate running the project", "info");
+        }
+
+    }
 
     keyboardShortcuts(event) {
 
-        if (event.ctrlKey && event.key === "s") {
+        if (event.ctrlKey && event.key.toLowerCase() === "s") {
 
             event.preventDefault();
-
-            this.logger.info("Save Project");
+            this.logger.info("Project saved (demo)");
+            this.terminal?.write?.("Project saved (demo)", "success");
 
         }
 
-        if (event.ctrlKey && event.key === "o") {
+        if (event.ctrlKey && event.key.toLowerCase() === "o") {
 
             event.preventDefault();
-
-            this.logger.info("Open Project");
+            this.logger.info("Open project requested");
+            this.terminal?.write?.("Open project requested", "info");
 
         }
 
-        if (event.ctrlKey && event.key === "p") {
+        if (event.ctrlKey && event.key.toLowerCase() === "p") {
 
             event.preventDefault();
-
-            this.logger.info("Command Palette");
+            this.logger.info("Command palette requested");
+            this.terminal?.write?.("Command palette requested", "info");
 
         }
 
@@ -125,7 +127,26 @@ class AtomicIDE {
 
             event.preventDefault();
 
-            this.logger.info("Run Project");
+            const compileStatus = document.getElementById("compileStatus");
+
+            if (compileStatus) {
+                compileStatus.textContent = "Running";
+                compileStatus.classList.add("status-running");
+            }
+
+            this.logger.info("Running ESP32 simulation");
+            this.terminal?.write?.("Running ESP32 simulation", "warning");
+
+            setTimeout(() => {
+
+                if (compileStatus) {
+                    compileStatus.textContent = "Ready";
+                    compileStatus.classList.remove("status-running");
+                }
+
+                this.terminal?.write?.("Simulation finished successfully", "success");
+
+            }, 1500);
 
         }
 
@@ -133,14 +154,9 @@ class AtomicIDE {
 
 }
 
-/**
- * Bootstrap
- */
-
 window.addEventListener("DOMContentLoaded", async () => {
 
-    const app = new AtomicIDE();
-
+    const app = new ESPNextGenIDE();
     await app.initialize();
 
 });
