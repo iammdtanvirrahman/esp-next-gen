@@ -7,11 +7,13 @@ import { Explorer } from "./explorer/explorer.js";
 import { HardwareWorkspace } from "./hardware/workspace.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-phase3";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-phase3";
-import { TargetValidator } from "./compiler/targetValidator.js?v=20260812-phase3";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-phase3";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-phase3";
+import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-build-1";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-build-1";
+import { TargetValidator } from "./compiler/targetValidator.js?v=20260812-build-1";
+import { LibraryResolver } from "./compiler/libraryResolver.js?v=20260812-build-1";
+import { BuildManager } from "./build/buildManager.js?v=20260812-build-1";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-build-1";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-build-1";
 import { PluginRegistry } from "./plugins/registry.js";
 import { ProjectManager } from "./core/projectManager.js";
 import { TestRunner } from "./core/testRunner.js";
@@ -29,8 +31,16 @@ class UniversalHardwareIDE {
         this.terminal = new Terminal();
         this.compiler = new VirtualCompiler();
         this.targetValidator = new TargetValidator(this.terminal);
-        this.brain = new BrainRuntime(this.network, this.terminal);
+        this.libraryResolver = new LibraryResolver();
         this.plugins = new PluginRegistry(this.terminal);
+        this.buildManager = new BuildManager({
+            terminal: this.terminal,
+            compiler: this.compiler,
+            libraryResolver: this.libraryResolver,
+            targetValidator: this.targetValidator,
+            plugins: this.plugins
+        });
+        this.brain = new BrainRuntime(this.network, this.terminal);
         this.circuitBuilder = new CircuitBuilder(document.getElementById("circuitBuilder"), this.terminal);
         this.virtualBoard = new VirtualBoard(document.getElementById("virtualBoard"));
         this.projectManager = new ProjectManager(this.editor, this.terminal);
@@ -50,6 +60,7 @@ class UniversalHardwareIDE {
             await this.network.initialize();
             await this.terminal.initialize();
             await this.plugins.load();
+            await this.buildManager.initialize();
             await this.loadBoards();
             this.virtualBoard.initialize();
             await this.circuitBuilder.initialize();
@@ -83,20 +94,17 @@ class UniversalHardwareIDE {
     populateSelectors() {
         const boardSelect = document.getElementById("boardSelect");
         const packSelect = document.getElementById("packSelect");
-
         if (boardSelect) {
             boardSelect.innerHTML = this.boardRegistry.map(board => `<option value="${this.escape(board.id)}">${this.escape(board.name)}</option>`).join("");
             boardSelect.value = "generic-mcu";
             boardSelect.addEventListener("change", () => this.selectBoard(boardSelect.value));
         }
-
         if (packSelect) {
             const packs = this.plugins.list();
             packSelect.innerHTML = packs.map(pack => `<option value="${this.escape(pack.id)}">${this.escape(pack.name)}</option>`).join("");
             packSelect.value = "core-generic";
             packSelect.addEventListener("change", () => this.selectPack(packSelect.value));
         }
-
         this.selectBoard("generic-mcu");
     }
 
@@ -143,12 +151,8 @@ class UniversalHardwareIDE {
         window.addEventListener("resize", () => this.layout.resize());
         window.addEventListener("keydown", event => this.keyboardShortcuts(event));
         document.addEventListener("network", event => this.handleNetworkEvent(event.detail));
-        document.addEventListener("virtual-hardware", event => {
-            if (event.detail?.state) this.virtualBoard.update(event.detail.state);
-        });
-        document.addEventListener("circuit-validation", event => {
-            this.circuitValid = Boolean(event.detail?.ok);
-        });
+        document.addEventListener("virtual-hardware", event => { if (event.detail?.state) this.virtualBoard.update(event.detail.state); });
+        document.addEventListener("circuit-validation", event => { this.circuitValid = Boolean(event.detail?.ok); });
         document.getElementById("compileBtn")?.addEventListener("click", () => this.compile());
         document.getElementById("runBtn")?.addEventListener("click", () => this.run());
         document.getElementById("stopBtn")?.addEventListener("click", () => this.stop());
@@ -160,6 +164,7 @@ class UniversalHardwareIDE {
         document.getElementById("projectExportBtn")?.addEventListener("click", () => this.projectManager.exportFile({ name: this.selectedBoard?.name || "universal-project" }));
         document.getElementById("projectImportBtn")?.addEventListener("click", () => this.projectManager.importFile());
         document.getElementById("selfTestBtn")?.addEventListener("click", () => this.testRunner.run());
+        document.getElementById("buildReportToggle")?.addEventListener("click", () => document.getElementById("buildReportPanel")?.classList.toggle("hidden"));
     }
 
     saveProject() {
@@ -213,9 +218,7 @@ class UniversalHardwareIDE {
             } else if (message.type === "hello") this.terminal.success(`Device ready: ${message.device || "endpoint"}`);
             else if (message.type === "ack") this.terminal.success(`Device ACK: ${message.command || "command"}`);
             else if (message.type === "error") this.terminal.error(`Device: ${message.message || "unknown error"}`);
-        } catch {
-            this.terminal.info(`DEVICE ← ${raw}`);
-        }
+        } catch { this.terminal.info(`DEVICE ← ${raw}`); }
     }
 
     renderTelemetry(data = {}) {
@@ -234,24 +237,21 @@ class UniversalHardwareIDE {
             return { ok: false, errors: circuit.errors.map(message => ({ line: 0, message })) };
         }
         const source = this.editor.getValue();
-        const target = this.targetValidator.validate(source);
-        target.warnings.forEach(message => this.terminal.warning(`TARGET ${message}`));
-        if (!target.ok) {
-            if (status) { status.textContent = "Target Error"; status.classList.add("status-error"); }
-            target.errors.forEach(message => this.terminal.error(`TARGET ERROR: ${message}`));
-            return { ok: false, errors: target.errors.map(message => ({ line: 0, message })) };
+        const report = this.buildManager.build({
+            source,
+            target: this.selectedBoard,
+            project: { name: this.selectedBoard?.name || "Universal Project" }
+        });
+        if (!report.ok) {
+            if (status) { status.textContent = "Build Failed"; status.classList.add("status-error"); }
+            report.errors.forEach(message => this.terminal.error(`BUILD ERROR: ${message}`));
+            report.warnings.forEach(message => this.terminal.warning(`BUILD WARN: ${message}`));
+            return { ok: false, errors: report.errors.map(message => ({ line: 0, message })) };
         }
-        const result = this.compiler.compile(source);
-        this.terminal.info(`COMPILE ${source.split(/\r?\n/).length} source lines for ${this.selectedBoard?.name || "target"}`);
-        if (!result.ok) {
-            if (status) { status.textContent = "Compile Error"; status.classList.add("status-error"); }
-            result.errors.forEach(error => this.terminal.error(`ERROR L${error.line}: ${error.message}`));
-            return result;
-        }
-        if (status) { status.textContent = `Compiled (${result.instructionCount} ops)`; status.classList.remove("status-error"); }
-        this.terminal.success(`COMPILE OK — ${result.instructionCount} core hardware/API operations`);
-        this.terminal.info(`FUNCTIONS ${result.functions.join(", ")}`);
-        return result;
+        if (status) { status.textContent = `Build OK (${report.instructionCount} ops)`; status.classList.remove("status-error"); }
+        this.terminal.success(`BUILD OK — ${report.libraries.length} libraries, ${report.instructionCount} virtual operations`);
+        report.missingIncludes.forEach(item => this.terminal.warning(`MISSING INCLUDE: ${item}`));
+        return report.compiler;
     }
 
     async run() {
@@ -287,12 +287,14 @@ class UniversalHardwareIDE {
         this.terminal.info("Universal hardware core loaded");
         this.terminal.info("PC Brain online");
         this.terminal.info("Generic interfaces only — device-specific hardware is opt-in via Hardware Packs");
+        this.terminal.info("Build pipeline online — libraries and target diagnostics enabled");
     }
 
     keyboardShortcuts(event) {
         if (event.key === "F5") { event.preventDefault(); this.run(); return; }
         if (event.key === "Escape") { event.preventDefault(); this.stop(); return; }
         if (event.ctrlKey && event.key.toLowerCase() === "s") { event.preventDefault(); this.saveProject(); }
+        if (event.ctrlKey && event.key.toLowerCase() === "b") { event.preventDefault(); this.compile(); }
     }
 
     escape(value) {
