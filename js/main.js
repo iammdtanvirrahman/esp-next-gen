@@ -7,12 +7,14 @@ import { Explorer } from "./explorer/explorer.js";
 import { HardwareWorkspace } from "./hardware/workspace.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-phase2";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-phase2";
-import { TargetValidator } from "./compiler/targetValidator.js?v=20260812-phase2";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-phase2";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-phase2";
+import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-phase3";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-phase3";
+import { TargetValidator } from "./compiler/targetValidator.js?v=20260812-phase3";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-phase3";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-phase3";
 import { PluginRegistry } from "./plugins/registry.js";
+import { ProjectManager } from "./core/projectManager.js";
+import { TestRunner } from "./core/testRunner.js";
 
 class UniversalHardwareIDE {
     constructor() {
@@ -31,6 +33,8 @@ class UniversalHardwareIDE {
         this.plugins = new PluginRegistry(this.terminal);
         this.circuitBuilder = new CircuitBuilder(document.getElementById("circuitBuilder"), this.terminal);
         this.virtualBoard = new VirtualBoard(document.getElementById("virtualBoard"));
+        this.projectManager = new ProjectManager(this.editor, this.terminal);
+        this.testRunner = new TestRunner(this);
         this.boardRegistry = [];
         this.selectedBoard = null;
         this.circuitValid = true;
@@ -54,11 +58,19 @@ class UniversalHardwareIDE {
             this.populateSelectors();
             this.loadCoreInterfaces();
             this.seedWorkspace();
+            window.__UNIVERSAL_IDE__ = this;
+            window.__UNIVERSAL_BRAIN__ = this.brain;
+            this.restoreProject();
             this.logger.success("Universal Hardware IDE Ready — PC Brain online");
         } catch (error) {
             console.error(error);
             this.terminal.error(`Startup failed: ${error.message}`);
         }
+    }
+
+    restoreProject() {
+        const restored = this.projectManager.loadLocal();
+        if (!restored) this.terminal.info("PROJECT no saved local project — using starter workspace");
     }
 
     async loadBoards() {
@@ -94,16 +106,10 @@ class UniversalHardwareIDE {
         this.selectedBoard = board;
         this.targetValidator.setBoard(board);
         this.circuitBuilder.setBoard?.(board);
-
         this.terminal.info(`TARGET ${board.name}`);
         const pins = board.gpio === "dynamic" ? "dynamic GPIO" : `${board.gpio.length} declared GPIOs`;
         this.terminal.info(`TARGET capabilities: ${(board.capabilities || []).join(", ")} · ${pins}`);
-
-        if (board.plugin) {
-            const packSelect = document.getElementById("packSelect");
-            if (packSelect && this.plugins.isEnabled(board.plugin)) packSelect.value = board.plugin;
-            this.terminal.info(`TARGET plugin: ${board.plugin}`);
-        }
+        if (board.plugin) this.terminal.info(`TARGET plugin: ${board.plugin}`);
     }
 
     async selectPack(id) {
@@ -111,19 +117,13 @@ class UniversalHardwareIDE {
         if (!pack) return;
         if (id !== "core-generic") await this.plugins.enable(id);
         else this.plugins.disable("esp32-servant");
-
         this.terminal.info(`PACK ${pack.name} selected`);
-        if (pack.type === "board-plugin") {
-            this.terminal.warning("Optional hardware pack selected. Device-specific APIs remain isolated from the Universal Core.");
-            if (pack.board) {
-                const boardSelect = document.getElementById("boardSelect");
-                if (boardSelect) {
-                    boardSelect.value = pack.board;
-                    this.selectBoard(pack.board);
-                }
+        if (pack.type === "board-plugin" && pack.board) {
+            const boardSelect = document.getElementById("boardSelect");
+            if (boardSelect) {
+                boardSelect.value = pack.board;
+                this.selectBoard(pack.board);
             }
-        } else {
-            this.terminal.info("PACK generic core — no device-specific sensors or actuators loaded.");
         }
     }
 
@@ -136,10 +136,7 @@ class UniversalHardwareIDE {
                 const items = data.components || data.interfaces || [];
                 container.innerHTML = items.map(item => `<div class="component-item"><div class="icon">${item.icon || "•"}</div><div class="meta"><div class="title">${this.escape(item.name)}</div><div class="subtitle">${this.escape(item.category || "Interface")}</div></div></div>`).join("");
             })
-            .catch(error => {
-                container.textContent = "Unable to load core interfaces";
-                this.terminal.warning(error.message);
-            });
+            .catch(error => { container.textContent = "Unable to load core interfaces"; this.terminal.warning(error.message); });
     }
 
     registerEvents() {
@@ -158,6 +155,15 @@ class UniversalHardwareIDE {
         document.getElementById("connectBtn")?.addEventListener("click", () => this.connect());
         document.getElementById("disconnectBtn")?.addEventListener("click", () => this.disconnect());
         document.getElementById("saveConnectionBtn")?.addEventListener("click", () => this.saveConnection());
+        document.getElementById("projectSaveBtn")?.addEventListener("click", () => this.saveProject());
+        document.getElementById("projectLoadBtn")?.addEventListener("click", () => this.projectManager.loadLocal());
+        document.getElementById("projectExportBtn")?.addEventListener("click", () => this.projectManager.exportFile({ name: this.selectedBoard?.name || "universal-project" }));
+        document.getElementById("projectImportBtn")?.addEventListener("click", () => this.projectManager.importFile());
+        document.getElementById("selfTestBtn")?.addEventListener("click", () => this.testRunner.run());
+    }
+
+    saveProject() {
+        this.projectManager.save({ name: this.selectedBoard?.name || "universal-project", board: this.selectedBoard?.id || "generic-mcu" });
     }
 
     initializeConnectionUI() {
@@ -178,10 +184,7 @@ class UniversalHardwareIDE {
     connect() {
         const ip = document.getElementById("espIp")?.value.trim() || this.network.ip;
         const port = Number(document.getElementById("espPort")?.value || this.network.port || 81);
-        if (!ip) {
-            this.terminal.error("Enter a device endpoint first.");
-            return;
-        }
+        if (!ip) return this.terminal.error("Enter a device endpoint first.");
         this.network.enableAutoReconnect();
         this.network.connect(ip, port);
     }
@@ -230,7 +233,6 @@ class UniversalHardwareIDE {
             circuit.errors.forEach(error => this.terminal.error(`CIRCUIT ${error}`));
             return { ok: false, errors: circuit.errors.map(message => ({ line: 0, message })) };
         }
-
         const source = this.editor.getValue();
         const target = this.targetValidator.validate(source);
         target.warnings.forEach(message => this.terminal.warning(`TARGET ${message}`));
@@ -239,7 +241,6 @@ class UniversalHardwareIDE {
             target.errors.forEach(message => this.terminal.error(`TARGET ERROR: ${message}`));
             return { ok: false, errors: target.errors.map(message => ({ line: 0, message })) };
         }
-
         const result = this.compiler.compile(source);
         this.terminal.info(`COMPILE ${source.split(/\r?\n/).length} source lines for ${this.selectedBoard?.name || "target"}`);
         if (!result.ok) {
@@ -291,7 +292,7 @@ class UniversalHardwareIDE {
     keyboardShortcuts(event) {
         if (event.key === "F5") { event.preventDefault(); this.run(); return; }
         if (event.key === "Escape") { event.preventDefault(); this.stop(); return; }
-        if (event.ctrlKey && event.key.toLowerCase() === "s") { event.preventDefault(); this.editor.save(); }
+        if (event.ctrlKey && event.key.toLowerCase() === "s") { event.preventDefault(); this.saveProject(); }
     }
 
     escape(value) {
