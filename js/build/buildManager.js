@@ -37,9 +37,8 @@ export class BuildManager {
         report.warnings.push(...(targetResult.warnings || []));
         report.errors.push(...(targetResult.errors || []));
 
-        let resolution = [];
         try {
-            resolution = this.libraryResolver?.resolve?.(code) || [];
+            const resolution = this.libraryResolver?.resolve?.(code) || [];
             report.libraries = resolution.map(lib => ({
                 id: lib.id,
                 name: lib.name,
@@ -60,8 +59,14 @@ export class BuildManager {
         report.ok = Boolean(compileResult.ok ?? compileResult.success) && report.errors.length === 0;
         report.compiler = {
             ok: Boolean(compileResult.ok ?? compileResult.success),
+            errors: compileResult.errors || [],
+            warnings: compileResult.warnings || [],
             functions: compileResult.functions || [],
             instructions: compileResult.instructions || [],
+            generatedSource: compileResult.generatedSource || "",
+            factory: compileResult.factory,
+            sourceLines: compileResult.sourceLines || report.sourceLines,
+            globals: compileResult.globals || "",
             generatedIncludes: this.libraryResolver?.generateIncludeBlock?.() || ""
         };
 
