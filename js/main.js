@@ -7,10 +7,11 @@ import { Explorer } from "./explorer/explorer.js";
 import { HardwareWorkspace } from "./hardware/workspace.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-universal-1";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-universal-1";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-universal-1";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-universal-1";
+import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-phase2";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-phase2";
+import { TargetValidator } from "./compiler/targetValidator.js?v=20260812-phase2";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-phase2";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-phase2";
 import { PluginRegistry } from "./plugins/registry.js";
 
 class UniversalHardwareIDE {
@@ -25,11 +26,13 @@ class UniversalHardwareIDE {
         this.network = new NetworkManager();
         this.terminal = new Terminal();
         this.compiler = new VirtualCompiler();
+        this.targetValidator = new TargetValidator(this.terminal);
         this.brain = new BrainRuntime(this.network, this.terminal);
         this.plugins = new PluginRegistry(this.terminal);
         this.circuitBuilder = new CircuitBuilder(document.getElementById("circuitBuilder"), this.terminal);
         this.virtualBoard = new VirtualBoard(document.getElementById("virtualBoard"));
         this.boardRegistry = [];
+        this.selectedBoard = null;
         this.circuitValid = true;
     }
 
@@ -68,27 +71,39 @@ class UniversalHardwareIDE {
     populateSelectors() {
         const boardSelect = document.getElementById("boardSelect");
         const packSelect = document.getElementById("packSelect");
+
         if (boardSelect) {
-            boardSelect.innerHTML = this.boardRegistry.map(board => `<option value="${board.id}">${this.escape(board.name)}</option>`).join("");
+            boardSelect.innerHTML = this.boardRegistry.map(board => `<option value="${this.escape(board.id)}">${this.escape(board.name)}</option>`).join("");
             boardSelect.value = "generic-mcu";
             boardSelect.addEventListener("change", () => this.selectBoard(boardSelect.value));
         }
+
         if (packSelect) {
             const packs = this.plugins.list();
-            packSelect.innerHTML = packs.map(pack => `<option value="${pack.id}">${this.escape(pack.name)}</option>`).join("");
+            packSelect.innerHTML = packs.map(pack => `<option value="${this.escape(pack.id)}">${this.escape(pack.name)}</option>`).join("");
             packSelect.value = "core-generic";
             packSelect.addEventListener("change", () => this.selectPack(packSelect.value));
         }
+
         this.selectBoard("generic-mcu");
     }
 
     selectBoard(id) {
         const board = this.boardRegistry.find(item => item.id === id);
         if (!board) return;
-        this.circuitBuilder.setBoard(board);
+        this.selectedBoard = board;
+        this.targetValidator.setBoard(board);
+        this.circuitBuilder.setBoard?.(board);
+
         this.terminal.info(`TARGET ${board.name}`);
         const pins = board.gpio === "dynamic" ? "dynamic GPIO" : `${board.gpio.length} declared GPIOs`;
         this.terminal.info(`TARGET capabilities: ${(board.capabilities || []).join(", ")} · ${pins}`);
+
+        if (board.plugin) {
+            const packSelect = document.getElementById("packSelect");
+            if (packSelect && this.plugins.isEnabled(board.plugin)) packSelect.value = board.plugin;
+            this.terminal.info(`TARGET plugin: ${board.plugin}`);
+        }
     }
 
     async selectPack(id) {
@@ -96,9 +111,17 @@ class UniversalHardwareIDE {
         if (!pack) return;
         if (id !== "core-generic") await this.plugins.enable(id);
         else this.plugins.disable("esp32-servant");
+
         this.terminal.info(`PACK ${pack.name} selected`);
         if (pack.type === "board-plugin") {
-            this.terminal.warning("Optional hardware pack selected. Its device-specific APIs are isolated from the Universal Core.");
+            this.terminal.warning("Optional hardware pack selected. Device-specific APIs remain isolated from the Universal Core.");
+            if (pack.board) {
+                const boardSelect = document.getElementById("boardSelect");
+                if (boardSelect) {
+                    boardSelect.value = pack.board;
+                    this.selectBoard(pack.board);
+                }
+            }
         } else {
             this.terminal.info("PACK generic core — no device-specific sensors or actuators loaded.");
         }
@@ -113,7 +136,10 @@ class UniversalHardwareIDE {
                 const items = data.components || data.interfaces || [];
                 container.innerHTML = items.map(item => `<div class="component-item"><div class="icon">${item.icon || "•"}</div><div class="meta"><div class="title">${this.escape(item.name)}</div><div class="subtitle">${this.escape(item.category || "Interface")}</div></div></div>`).join("");
             })
-            .catch(error => { container.textContent = "Unable to load core interfaces"; this.terminal.warning(error.message); });
+            .catch(error => {
+                container.textContent = "Unable to load core interfaces";
+                this.terminal.warning(error.message);
+            });
     }
 
     registerEvents() {
@@ -164,25 +190,11 @@ class UniversalHardwareIDE {
 
     handleNetworkEvent(event) {
         switch (event?.type) {
-            case "connecting":
-                this.setConnectionStatus("Connecting...", "status-running");
-                this.terminal.info(`CONNECT ${event.data.ip}:${event.data.port}`);
-                break;
-            case "connected":
-                this.setConnectionStatus("Connected", "status-connected");
-                this.terminal.success("Device endpoint connected");
-                break;
-            case "disconnected":
-                this.setConnectionStatus("Disconnected", "");
-                this.terminal.warning("Device endpoint disconnected");
-                break;
-            case "error":
-                this.setConnectionStatus("Connection error", "status-error");
-                this.terminal.error("Device network error");
-                break;
-            case "message":
-                this.handleDeviceMessage(event.data);
-                break;
+            case "connecting": this.setConnectionStatus("Connecting...", "status-running"); this.terminal.info(`CONNECT ${event.data.ip}:${event.data.port}`); break;
+            case "connected": this.setConnectionStatus("Connected", "status-connected"); this.terminal.success("Device endpoint connected"); break;
+            case "disconnected": this.setConnectionStatus("Disconnected", ""); this.terminal.warning("Device endpoint disconnected"); break;
+            case "error": this.setConnectionStatus("Connection error", "status-error"); this.terminal.error("Device network error"); break;
+            case "message": this.handleDeviceMessage(event.data); break;
         }
         this.updateNetworkTelemetry();
     }
@@ -195,13 +207,9 @@ class UniversalHardwareIDE {
                 this.brain.setTelemetry(message);
                 this.virtualBoard.update({ telemetry: message });
                 this.renderTelemetry(message);
-            } else if (message.type === "hello") {
-                this.terminal.success(`Device ready: ${message.device || "endpoint"}`);
-            } else if (message.type === "ack") {
-                this.terminal.success(`Device ACK: ${message.command || "command"}`);
-            } else if (message.type === "error") {
-                this.terminal.error(`Device: ${message.message || "unknown error"}`);
-            }
+            } else if (message.type === "hello") this.terminal.success(`Device ready: ${message.device || "endpoint"}`);
+            else if (message.type === "ack") this.terminal.success(`Device ACK: ${message.command || "command"}`);
+            else if (message.type === "error") this.terminal.error(`Device: ${message.message || "unknown error"}`);
         } catch {
             this.terminal.info(`DEVICE ← ${raw}`);
         }
@@ -224,8 +232,16 @@ class UniversalHardwareIDE {
         }
 
         const source = this.editor.getValue();
+        const target = this.targetValidator.validate(source);
+        target.warnings.forEach(message => this.terminal.warning(`TARGET ${message}`));
+        if (!target.ok) {
+            if (status) { status.textContent = "Target Error"; status.classList.add("status-error"); }
+            target.errors.forEach(message => this.terminal.error(`TARGET ERROR: ${message}`));
+            return { ok: false, errors: target.errors.map(message => ({ line: 0, message })) };
+        }
+
         const result = this.compiler.compile(source);
-        this.terminal.info(`COMPILE ${source.split(/\r?\n/).length} source lines`);
+        this.terminal.info(`COMPILE ${source.split(/\r?\n/).length} source lines for ${this.selectedBoard?.name || "target"}`);
         if (!result.ok) {
             if (status) { status.textContent = "Compile Error"; status.classList.add("status-error"); }
             result.errors.forEach(error => this.terminal.error(`ERROR L${error.line}: ${error.message}`));
