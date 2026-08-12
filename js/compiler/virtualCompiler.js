@@ -30,22 +30,16 @@ export class VirtualCompiler {
         const normalized = this.normalize(text);
         const functions = this.extractFunctions(normalized);
 
-        if (!functions.setup) {
-            this.errors.push({ line: 1, message: "Missing void setup()" });
-        }
-        if (!functions.loop) {
-            this.errors.push({ line: 1, message: "Missing void loop()" });
-        }
+        if (!functions.setup) this.errors.push({ line: 1, message: "Missing void setup()" });
+        if (!functions.loop) this.errors.push({ line: 1, message: "Missing void loop()" });
 
-        if (this.errors.length) {
-            return this.result(false, [], this.errors);
-        }
+        if (this.errors.length) return this.result(false, [], this.errors);
 
+        const generatedSource = this.buildFactory(functions);
         let factory;
+
         try {
-            const programSource = this.buildFactory(functions);
-            // The generated program can only see the injected `api` object.
-            factory = new Function("api", `"use strict"; return (async () => { ${programSource} })();`);
+            factory = new Function("api", `"use strict"; return (async () => { ${generatedSource} })();`);
         } catch (error) {
             const line = this.extractSyntaxLine(error?.message);
             this.errors.push({ line, message: `Virtual compile error: ${error.message}` });
@@ -53,16 +47,15 @@ export class VirtualCompiler {
         }
 
         const instructions = this.collectHardwareCalls(text);
-        const warnings = [...this.warnings];
 
         return {
             ok: true,
             errors: [],
-            warnings,
+            warnings: [...this.warnings],
             instructionCount: instructions.length,
             instructions,
             functions: Object.keys(functions),
-            generatedSource: this.buildFactory(functions),
+            generatedSource,
             factory,
             sourceLines: text.split(/\r?\n/).length
         };
@@ -81,7 +74,6 @@ export class VirtualCompiler {
             .replace(/\bINPUT\b/g, "\"INPUT\"")
             .replace(/\bOUTPUT\b/g, "\"OUTPUT\"")
             .replace(/\bNULL\b/g, "null")
-            .replace(/\btrue\b|\bfalse\b/g, match => match)
             .replace(/\b(?:uint8_t|uint16_t|uint32_t|int8_t|int16_t|int32_t|unsigned|signed|long long|long|short|double|float|int|bool|char|byte|String|size_t)\s+(?=[A-Za-z_])/g, "let ")
             .replace(/\bconst\s+let\b/g, "const")
             .replace(/\bvoid\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g, (_, name, params) => `async function ${name}(${this.cleanParams(params)})`)
@@ -107,12 +99,9 @@ export class VirtualCompiler {
 
     cleanParams(params) {
         if (!params.trim()) return "";
-        return params
-            .split(",")
-            .map(param => param.trim()
-                .replace(/^(const\s+)?(?:unsigned\s+)?(?:int|float|double|long|short|bool|char|byte|String|size_t|uint8_t|uint16_t|uint32_t|int8_t|int16_t|int32_t)\s+/, "")
-                .replace(/\s*=\s*[^=]+$/, ""))
-            .join(", ");
+        return params.split(",").map(param => param.trim()
+            .replace(/^(const\s+)?(?:unsigned\s+)?(?:int|float|double|long|short|bool|char|byte|String|size_t|uint8_t|uint16_t|uint32_t|int8_t|int16_t|int32_t)\s+/, "")
+            .replace(/\s*=\s*[^=]+$/, "")).join(", ");
     }
 
     extractFunctions(source) {
@@ -159,11 +148,12 @@ export class VirtualCompiler {
     }
 
     buildFactory(functions) {
-        const names = Object.keys(functions);
-        return names.map(name => {
+        const declarations = Object.keys(functions).map(name => {
             const fn = functions[name];
             return `async function ${fn.name}(${fn.params}) { ${fn.body} }`;
         }).join("\n");
+
+        return `${declarations}\nreturn { setup, loop, functions: { ${Object.keys(functions).map(name => `${name}`).join(", ")} } };`;
     }
 
     collectHardwareCalls(source) {
@@ -172,6 +162,8 @@ export class VirtualCompiler {
             ["pinMode", /pinMode\s*\(([^)]*)\)/g],
             ["digitalWrite", /digitalWrite\s*\(([^)]*)\)/g],
             ["analogWrite", /analogWrite\s*\(([^)]*)\)/g],
+            ["digitalRead", /digitalRead\s*\(([^)]*)\)/g],
+            ["analogRead", /analogRead\s*\(([^)]*)\)/g],
             ["servo", /servo\s*\(([^)]*)\)/g],
             ["move", /move\s*\(([^)]*)\)/g],
             ["stop", /\bstop\s*\(\s*\)/g],
