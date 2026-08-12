@@ -20,7 +20,6 @@ class ESPNextGenIDE {
         this.editor = new EditorManager();
         this.explorer = new Explorer();
         this.hardware = new HardwareWorkspace();
-        this.fineSystem = new FineSystem(this.network, this.terminal);
         this.network = new NetworkManager();
         this.terminal = new Terminal();
         this.compiler = new VirtualCompiler();
