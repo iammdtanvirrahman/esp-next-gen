@@ -8,9 +8,10 @@ import { HardwareWorkspace } from "./hardware/workspace.js";
 import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1030";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-1030";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1030";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1101";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-1101";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1101";
+import { CircuitBuilder } from "./hardware/circuitBuilder.js?v=20260812-1101";
 
 class ESPNextGenIDE {
     constructor() {
@@ -27,6 +28,8 @@ class ESPNextGenIDE {
         this.brain = new BrainRuntime(this.network, this.terminal);
         this.fineSystem = new FineSystem(this.network, this.terminal);
         this.virtualBoard = new VirtualBoard(document.getElementById("virtualBoard"));
+        this.circuitBuilder = new CircuitBuilder(document.getElementById("circuitBuilder"), this.terminal);
+        this.circuitValid = true;
         this.joystick = { active: false, pointerId: null, maxDistance: 54, lastSentAt: 0 };
     }
 
@@ -41,6 +44,7 @@ class ESPNextGenIDE {
             await this.terminal.initialize();
             this.fineSystem.initialize();
             this.virtualBoard.initialize();
+            await this.circuitBuilder.initialize();
             this.registerEvents();
             this.initializeConnectionUI();
             this.initializeJoystick();
@@ -60,6 +64,12 @@ class ESPNextGenIDE {
         document.addEventListener("network", event => this.handleNetworkEvent(event.detail));
         document.addEventListener("virtual-hardware", event => this.handleVirtualHardware(event.detail));
         document.addEventListener("virtual-input", event => this.handleVirtualInput(event.detail));
+        document.addEventListener("circuit-validation", event => {
+            this.circuitValid = Boolean(event.detail?.ok);
+            if (event.detail?.errors?.length) {
+                event.detail.errors.forEach(error => this.terminal.error(`CIRCUIT ${error}`));
+            }
+        });
         document.getElementById("compileBtn")?.addEventListener("click", () => this.compile());
         document.getElementById("runBtn")?.addEventListener("click", () => this.run());
         document.getElementById("stopBtn")?.addEventListener("click", () => this.stop());
@@ -247,6 +257,14 @@ class ESPNextGenIDE {
     compile() {
         const code = this.editor.getValue();
         const status = document.getElementById("compileStatus");
+        const circuit = this.circuitBuilder.validate(false);
+        if (!circuit.ok) {
+            if (status) { status.textContent = "Circuit Error"; status.classList.add("status-error"); }
+            circuit.errors.forEach(error => this.terminal.error(`CIRCUIT ${error}`));
+            this.terminal.error("COMPILE BLOCKED — fix GPIO conflicts before running the Brain.");
+            return { ok: false, errors: circuit.errors.map(message => ({ line: 0, message })) };
+        }
+
         const result = this.compiler.compile(code);
         this.terminal.info(`COMPILE  ${result.sourceLines || code.split(/\r?\n/).length} source lines`);
         if (!result.ok) {
@@ -285,6 +303,7 @@ class ESPNextGenIDE {
         this.terminal.info("ESP32 = servant hardware endpoint");
         this.terminal.info("Compile = virtual toolchain; Run = local execution + hardware forwarding");
         this.terminal.info("Virtual Hardware Lab ready — change distance/fine to test sensor logic");
+        this.terminal.info("Virtual Circuit Builder ready — assign GPIOs and validate before Run");
     }
 
     keyboardShortcuts(event) {
