@@ -1,0 +1,23 @@
+/* ==========================================================
+   Notifications Placeholder Styles
+   ========================================================== */
+
+.notification-stack {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1200;
+}
+
+.notification {
+    min-width: 240px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(18, 26, 46, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
