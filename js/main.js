@@ -126,10 +126,90 @@ class ESPNextGenIDE {
             this.setConnectionStatus("Connection error", "status-error");
             this.terminal.error("ESP32 network error");
         } else if (type === "message") {
-            this.terminal.info(`ESP32 ← ${typeof event.data === "string" ? event.data : "binary packet"}`);
+            this.handleESP32Message(event.data);
         }
 
         this.updateNetworkTelemetry();
+    }
+
+    handleESP32Message(raw) {
+        if (typeof raw !== "string") {
+            this.terminal.info("ESP32 sent a binary packet");
+            return;
+        }
+
+        if (raw === "PONG") {
+            return;
+        }
+
+        try {
+            const message = JSON.parse(raw);
+
+            switch (message.type) {
+                case "hello":
+                    this.terminal.success(`ESP32 ready: ${message.device || "device"}`);
+                    break;
+
+                case "status":
+                    this.terminal.info(
+                        `ESP32 status: ${message.ip || "unknown IP"}, speed ${message.speed ?? "--"}`
+                    );
+                    break;
+
+                case "telemetry":
+                    this.updateTelemetryDisplay(message);
+                    break;
+
+                case "ack":
+                    this.terminal.success(`ESP32 ACK: ${message.command || "command"}`);
+                    break;
+
+                case "error":
+                    this.terminal.error(`ESP32: ${message.message || "Unknown error"}`);
+                    break;
+
+                case "run":
+                    this.terminal.info(`ESP32 run status: ${message.status || "unknown"}`);
+                    break;
+
+                default:
+                    this.terminal.info(`ESP32 ← ${raw}`);
+            }
+        } catch {
+            this.terminal.info(`ESP32 ← ${raw}`);
+        }
+    }
+
+    updateTelemetryDisplay(message) {
+        let distance = document.getElementById("sensorDistance");
+        let obstacle = document.getElementById("sensorObstacle");
+
+        if (!distance || !obstacle) {
+            const panel = document.querySelector(".connection-panel");
+            if (!panel) return;
+
+            const telemetry = document.createElement("div");
+            telemetry.className = "telemetry-grid live-sensor-grid";
+            telemetry.innerHTML = `
+                <div><span>Distance</span><strong id="sensorDistance">-- cm</strong></div>
+                <div><span>Obstacle</span><strong id="sensorObstacle">--</strong></div>
+            `;
+            panel.appendChild(telemetry);
+
+            distance = document.getElementById("sensorDistance");
+            obstacle = document.getElementById("sensorObstacle");
+        }
+
+        if (distance) {
+            distance.textContent = message.distance >= 0
+                ? `${Number(message.distance).toFixed(1)} cm`
+                : "No reading";
+        }
+
+        if (obstacle) {
+            obstacle.textContent = message.obstacle ? "Detected" : "Clear";
+            obstacle.className = message.obstacle ? "status-running" : "status-connected";
+        }
     }
 
     setConnectionStatus(text, className = "") {
