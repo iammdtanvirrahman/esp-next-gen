@@ -1,10 +1,9 @@
 /*
  * ESP Next Gen - Virtual Compiler
  *
- * Browser-side Arduino-like C++ toolchain.
- * It translates a practical Arduino/C++ subset into a restricted async
- * JavaScript runtime so the PC Brain can execute the program locally.
- * Hardware APIs are virtualized and can be forwarded to the ESP32.
+ * Browser-side Arduino-like C++ toolchain. It translates a practical
+ * Arduino/C++ subset into a restricted async JavaScript runtime so the
+ * PC Brain can execute the program locally while forwarding hardware APIs.
  */
 export class VirtualCompiler {
     constructor() {
@@ -18,9 +17,7 @@ export class VirtualCompiler {
         this.errors = [];
         this.warnings = [];
 
-        if (!text.trim()) {
-            return this.result(false, [], [{ line: 1, message: "Source is empty." }]);
-        }
+        if (!text.trim()) return this.result(false, [], [{ line: 1, message: "Source is empty." }]);
 
         if (this.forbidden.test(text)) {
             const match = text.match(this.forbidden);
@@ -32,29 +29,26 @@ export class VirtualCompiler {
 
         if (!functions.setup) this.errors.push({ line: 1, message: "Missing void setup()" });
         if (!functions.loop) this.errors.push({ line: 1, message: "Missing void loop()" });
-
         if (this.errors.length) return this.result(false, [], this.errors);
 
         const generatedSource = this.buildFactory(functions);
         let factory;
-
         try {
             factory = new Function("api", `"use strict"; return (async () => { ${generatedSource} })();`);
         } catch (error) {
-            const line = this.extractSyntaxLine(error?.message);
-            this.errors.push({ line, message: `Virtual compile error: ${error.message}` });
+            this.errors.push({ line: this.extractSyntaxLine(error?.message), message: `Virtual compile error: ${error.message}` });
             return this.result(false, [], this.errors);
         }
 
         const instructions = this.collectHardwareCalls(text);
-
         return {
             ok: true,
             errors: [],
             warnings: [...this.warnings],
             instructionCount: instructions.length,
             instructions,
-            functions: Object.keys(functions),
+            functions: Object.keys(functions).filter(key => key !== "preamble"),
+            globals: functions.preamble || "",
             generatedSource,
             factory,
             sourceLines: text.split(/\r?\n/).length
@@ -90,11 +84,18 @@ export class VirtualCompiler {
             .replace(/\bstop\s*\(\s*\)/g, "await api.stop()")
             .replace(/\bmillis\s*\(\s*\)/g, "api.millis()")
             .replace(/\bmicros\s*\(\s*\)/g, "api.micros()")
+            .replace(/\bconstrain\s*\(/g, "api.constrain(")
+            .replace(/\bmap\s*\(/g, "api.map(")
+            .replace(/\babs\s*\(/g, "api.abs(")
+            .replace(/\bmin\s*\(/g, "api.min(")
+            .replace(/\bmax\s*\(/g, "api.max(")
+            .replace(/\brandom\s*\(/g, "api.random(")
+            .replace(/\brandomSeed\s*\(/g, "api.randomSeed(")
+            .replace(/\byield\s*\(\s*\)/g, "await api.yield()")
             .replace(/\bSerial\s*\.\s*println\s*\(/g, "await api.serialPrintln(")
             .replace(/\bSerial\s*\.\s*print\s*\(/g, "await api.serialPrint(")
             .replace(/\bSerial\s*\.\s*begin\s*\(/g, "await api.serialBegin(")
-            .replace(/\bSerial\s*\.\s*printf\s*\(/g, "await api.serialPrintf(")
-            .replace(/\bdelayMicroseconds\s*\(/g, "api.delayMicroseconds(");
+            .replace(/\bSerial\s*\.\s*printf\s*\(/g, "await api.serialPrintf(");
     }
 
     cleanParams(params) {
@@ -105,11 +106,13 @@ export class VirtualCompiler {
     }
 
     extractFunctions(source) {
-        const functions = {};
+        const functions = { preamble: "" };
         const regex = /(?:async\s+)?function\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*\{/g;
         let match;
+        let firstFunctionIndex = -1;
 
         while ((match = regex.exec(source))) {
+            if (firstFunctionIndex < 0) firstFunctionIndex = match.index;
             const name = match[1];
             const start = regex.lastIndex;
             let depth = 1;
@@ -144,16 +147,23 @@ export class VirtualCompiler {
             regex.lastIndex = index;
         }
 
+        if (firstFunctionIndex > 0) {
+            functions.preamble = source.slice(0, firstFunctionIndex).trim();
+        }
         return functions;
     }
 
     buildFactory(functions) {
-        const declarations = Object.keys(functions).map(name => {
-            const fn = functions[name];
-            return `async function ${fn.name}(${fn.params}) { ${fn.body} }`;
-        }).join("\n");
+        const declarations = Object.keys(functions)
+            .filter(name => name !== "preamble")
+            .map(name => {
+                const fn = functions[name];
+                return `async function ${fn.name}(${fn.params}) { ${fn.body} }`;
+            }).join("\n");
 
-        return `${declarations}\nreturn { setup, loop, functions: { ${Object.keys(functions).map(name => `${name}`).join(", ")} } };`;
+        const globals = functions.preamble ? `${functions.preamble}\n` : "";
+        const names = Object.keys(functions).filter(name => name !== "preamble");
+        return `${globals}${declarations}\nreturn { setup, loop, functions: { ${names.map(name => `${name}`).join(", ")} } };`;
     }
 
     collectHardwareCalls(source) {
@@ -182,14 +192,7 @@ export class VirtualCompiler {
     }
 
     result(ok, instructions, errors = []) {
-        return {
-            ok,
-            errors,
-            warnings: [...this.warnings],
-            instructions,
-            instructionCount: instructions.length,
-            sourceLines: 0
-        };
+        return { ok, errors, warnings: [...this.warnings], instructions, instructionCount: instructions.length, sourceLines: 0 };
     }
 
     findLine(source, index) {
