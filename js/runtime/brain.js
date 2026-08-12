@@ -26,18 +26,17 @@ export class BrainRuntime {
         return {
             pinMode: async (pin, mode) => {
                 this.virtualPins.set(Number(pin), { mode, value: this.virtualPins.get(Number(pin))?.value ?? false });
-                this.terminal.info(`BRAIN  pinMode(${pin}, ${mode})`);
-                this.network.sendJSON({ type: "pinMode", pin: Number(pin), mode });
+                this.terminal.info(`BRAIN  virtual pinMode(${pin}, ${mode})`);
             },
             digitalWrite: async (pin, state) => {
                 this.virtualPins.set(Number(pin), { ...this.virtualPins.get(Number(pin)), value: Boolean(state) });
-                this.terminal.info(`BRAIN  digitalWrite(${pin}, ${state ? "HIGH" : "LOW"})`);
+                this.terminal.info(`BRAIN  digitalWrite(${pin}, ${state ? "HIGH" : "LOW"}) → servant`);
                 this.network.digitalWrite(pin, state);
             },
             analogWrite: async (pin, value) => {
                 const numeric = Math.max(0, Math.min(255, Number(value) || 0));
                 this.virtualAnalog.set(Number(pin), numeric);
-                this.terminal.info(`BRAIN  analogWrite(${pin}, ${numeric})`);
+                this.terminal.info(`BRAIN  analogWrite(${pin}, ${numeric}) → servant`);
                 this.network.analogWrite(pin, numeric);
             },
             digitalRead: async pin => {
@@ -52,16 +51,16 @@ export class BrainRuntime {
             },
             servo: async (pin, angle) => {
                 const numeric = Math.max(0, Math.min(180, Number(angle) || 0));
-                this.terminal.info(`BRAIN  servo(${pin}, ${numeric})`);
+                this.terminal.info(`BRAIN  servo(${pin}, ${numeric}) → servant`);
                 this.network.servo(pin, numeric);
             },
             move: async (direction, speed = 0) => {
                 const numeric = Math.max(0, Math.min(255, Number(speed) || 0));
-                this.terminal.info(`BRAIN  move(${direction}, ${numeric})`);
+                this.terminal.info(`BRAIN  move(${direction}, ${numeric}) → servant`);
                 this.network.sendMove(direction, numeric);
             },
             stop: async () => {
-                this.terminal.info("BRAIN  stop()");
+                this.terminal.info("BRAIN  stop() → servant");
                 this.network.stopMotors();
             },
             delay: async ms => {
