@@ -17,36 +17,37 @@ export class PluginRegistry {
             if (pack.enabledByDefault) this.enabled.add(pack.id);
         }
 
-        return [...this.packs.values()];
+        document.dispatchEvent(new CustomEvent("plugin-registry-ready", {
+            detail: { packs: this.list() }
+        }));
+        return this.list();
     }
 
-    list() {
-        return [...this.packs.values()];
-    }
-
-    get(packId) {
-        return this.packs.get(packId) || null;
-    }
-
-    isEnabled(packId) {
-        return this.enabled.has(packId);
-    }
+    list() { return [...this.packs.values()]; }
+    get(packId) { return this.packs.get(packId) || null; }
+    isEnabled(packId) { return this.enabled.has(packId); }
 
     async enable(packId) {
         const pack = this.get(packId);
         if (!pack) throw new Error(`Unknown hardware pack: ${packId}`);
-
         const data = await this.loadPackData(pack);
         this.enabled.add(packId);
         this.terminal?.success?.(`Hardware pack enabled: ${pack.name}`);
+        document.dispatchEvent(new CustomEvent("plugin-pack-changed", {
+            detail: { action: "enable", pack, data, enabled: [...this.enabled] }
+        }));
         return data;
     }
 
     disable(packId) {
         if (packId === "core-generic") return false;
+        const pack = this.get(packId);
         this.enabled.delete(packId);
         this.loadedData.delete(packId);
-        this.terminal?.info?.(`Hardware pack disabled: ${packId}`);
+        this.terminal?.info?.(`Hardware pack disabled: ${pack?.name || packId}`);
+        document.dispatchEvent(new CustomEvent("plugin-pack-changed", {
+            detail: { action: "disable", pack, enabled: [...this.enabled] }
+        }));
         return true;
     }
 
