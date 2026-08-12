@@ -1,115 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b1020">
-    <title>ESP Next Gen IDE</title>
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/virtual-board.css">
-    <link rel="stylesheet" href="./css/circuit-builder.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1020">
+  <title>Universal Hardware IDE</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/virtual-board.css">
+  <link rel="stylesheet" href="./css/circuit-builder.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
 <body>
 <div id="app">
-    <header class="topbar">
-        <div class="logo">ESP Next Gen IDE</div>
-        <div class="toolbar">
-            <button id="connectBtn" class="primary">Connect ESP32</button>
-            <button id="disconnectBtn">Disconnect</button>
-            <button id="compileBtn">Compile</button>
-            <button id="runBtn">Run</button>
-            <button id="stopBtn">Stop Brain</button>
+  <header class="topbar">
+    <div class="logo">Universal Hardware IDE</div>
+    <div class="toolbar">
+      <select id="boardSelect" aria-label="Target board"></select>
+      <select id="packSelect" aria-label="Hardware pack"></select>
+      <button id="connectBtn" class="primary">Connect Device</button>
+      <button id="disconnectBtn">Disconnect</button>
+      <button id="compileBtn">Compile</button>
+      <button id="runBtn">Run</button>
+      <button id="stopBtn">Stop Brain</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <section class="panel">
+        <h3>Project Explorer</h3>
+        <ul id="fileTree"><li>main.cpp</li><li>config.h</li><li>libraries</li></ul>
+      </section>
+      <section class="panel">
+        <h3>Generic Hardware Interfaces</h3>
+        <div id="componentsList">Loading...</div>
+      </section>
+    </aside>
+
+    <section class="editor-section">
+      <div class="editor-header">main.cpp</div>
+      <textarea id="codeEditor"></textarea>
+    </section>
+
+    <aside class="right-panel">
+      <section class="panel connection-panel">
+        <h3>Device Connection</h3>
+        <div class="connection-form">
+          <label for="espIp">Endpoint</label>
+          <input id="espIp" type="text" placeholder="192.168.x.x or hostname">
+          <label for="espPort">Protocol Port</label>
+          <input id="espPort" type="number" min="1" max="65535" value="81">
+          <button id="saveConnectionBtn">Save Connection</button>
         </div>
-    </header>
+        <div class="telemetry-grid">
+          <div><span>State</span><strong id="networkState">Disconnected</strong></div>
+          <div><span>Ping</span><strong id="networkPing">-- ms</strong></div>
+          <div><span>TX</span><strong id="networkTx">0</strong></div>
+          <div><span>RX</span><strong id="networkRx">0</strong></div>
+        </div>
+      </section>
 
-    <main class="workspace">
-        <aside class="sidebar">
-            <section class="panel">
-                <h3>Project Explorer</h3>
-                <ul id="fileTree"><li>main.cpp</li><li>config.h</li><li>libraries</li></ul>
-            </section>
-            <section class="panel">
-                <h3>Components</h3>
-                <div id="componentsList">Loading components...</div>
-            </section>
-        </aside>
+      <section class="panel">
+        <h3>Virtual Hardware</h3>
+        <div id="virtualBoard"></div>
+      </section>
 
-        <section class="editor-section">
-            <div class="editor-header">main.cpp</div>
-            <textarea id="codeEditor"></textarea>
-        </section>
+      <section class="panel" id="circuitBuilderPanel">
+        <div id="circuitBuilder"></div>
+      </section>
 
-        <aside class="right-panel">
-            <section class="panel connection-panel">
-                <h3>ESP32 Connection</h3>
-                <div class="connection-form">
-                    <label for="espIp">IP Address</label>
-                    <input id="espIp" type="text" inputmode="decimal" placeholder="192.168.1.50" autocomplete="off">
-                    <label for="espPort">WebSocket Port</label>
-                    <input id="espPort" type="number" min="1" max="65535" value="81">
-                    <button id="saveConnectionBtn">Save</button>
-                </div>
-                <div class="telemetry-grid">
-                    <div><span>State</span><strong id="networkState">Disconnected</strong></div>
-                    <div><span>Ping</span><strong id="networkPing">-- ms</strong></div>
-                    <div><span>TX</span><strong id="networkTx">0</strong></div>
-                    <div><span>RX</span><strong id="networkRx">0</strong></div>
-                </div>
-            </section>
+      <section class="panel">
+        <h3>Program Telemetry</h3>
+        <div id="genericTelemetry"><small>No telemetry reported.</small></div>
+      </section>
 
-            <section class="panel">
-                <h3>Hardware Monitor</h3>
-                <div class="telemetry-grid">
-                    <div><span>Distance</span><strong id="sensorDistance">-- cm</strong></div>
-                    <div><span>Safety</span><strong id="fineState">Clear</strong></div>
-                    <div><span>Countdown</span><strong id="fineCountdown">30s</strong></div>
-                    <div><span>Fine</span><strong id="fineAmount">$0</strong></div>
-                </div>
-                <button id="resetFineBtn">Reset Fine</button>
-            </section>
+      <section class="panel">
+        <h3>System Console</h3>
+        <div id="consoleOutput"></div>
+      </section>
+    </aside>
+  </main>
 
-            <section class="panel circuit-builder-panel" id="circuitBuilderPanel">
-                <div id="circuitBuilder"></div>
-            </section>
-
-            <section class="panel virtual-board" id="virtualBoardPanel">
-                <div id="virtualBoard"></div>
-            </section>
-
-            <section class="panel">
-                <h3>ESP32 Pin Mapper</h3>
-                <div id="pinMapper">
-                    <div class="pin">GPIO 0</div><div class="pin">GPIO 2</div>
-                    <div class="pin">GPIO 4</div><div class="pin">GPIO 5</div>
-                    <div class="pin">GPIO 13</div><div class="pin">GPIO 14</div>
-                    <div class="pin">GPIO 15</div><div class="pin">GPIO 18</div>
-                    <div class="pin">GPIO 19</div><div class="pin">GPIO 21</div>
-                    <div class="pin">GPIO 22</div><div class="pin">GPIO 32</div>
-                    <div class="pin">GPIO 33</div>
-                </div>
-            </section>
-
-            <section class="panel">
-                <h3>Joystick</h3>
-                <div id="joystickContainer"><div id="joystickBase"><div id="joystickStick"></div></div></div>
-            </section>
-
-            <section class="panel">
-                <h3>System Console</h3>
-                <div id="consoleOutput"></div>
-            </section>
-        </aside>
-    </main>
-
-    <footer class="statusbar">
-        <span id="connectionStatus">Disconnected</span>
-        <span id="compileStatus">Ready</span>
-    </footer>
+  <footer class="statusbar">
+    <span id="connectionStatus">Disconnected</span>
+    <span id="compileStatus">Brain Ready</span>
+  </footer>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-<script type="module" src="./js/main.js?v=20260812-1100"></script>
+<script type="module" src="./js/main.js?v=20260812-universal-1"></script>
 </body>
 </html>
