@@ -1,0 +1,38 @@
+/* ==========================================================
+   Terminal Panel
+   ========================================================== */
+
+#consoleOutput {
+    min-height: 180px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 14px;
+    border-radius: 12px;
+    background: #0a0f1f;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-family: "Fira Code", Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #c9d5ff;
+}
+
+.console-line {
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+.console-line.info {
+    color: #9fd0ff;
+}
+
+.console-line.success {
+    color: #7ef0c6;
+}
+
+.console-line.warning {
+    color: #ffd166;
+}
+
+.console-line.error {
+    color: #ff7b90;
+}

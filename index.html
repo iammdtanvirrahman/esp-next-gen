@@ -3,43 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Virtual IDE</title>
+    <meta name="theme-color" content="#0b1020">
+    <title>ESP Next Gen IDE</title>
 
-    <!-- Styles -->
     <link rel="stylesheet" href="./css/style.css">
-
-    <!-- CodeMirror -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
-
 <body>
-
-    <!-- APP CONTAINER -->
     <div id="app">
-
-        <!-- TOP BAR -->
         <header class="topbar">
-            <div class="logo">
-                Universal Virtual IDE
-            </div>
-
+            <div class="logo">ESP Next Gen IDE</div>
             <div class="toolbar">
-                <button id="connectBtn">Connect ESP32</button>
+                <button id="connectBtn" class="primary">Connect ESP32</button>
+                <button id="disconnectBtn">Disconnect</button>
                 <button id="compileBtn">Compile</button>
                 <button id="runBtn">Run</button>
             </div>
         </header>
 
-        <!-- MAIN LAYOUT -->
         <main class="workspace">
-
-            <!-- LEFT SIDEBAR -->
             <aside class="sidebar">
-
                 <section class="panel">
                     <h3>Project Explorer</h3>
-
                     <ul id="fileTree">
                         <li>main.cpp</li>
                         <li>config.h</li>
@@ -49,89 +35,71 @@
 
                 <section class="panel">
                     <h3>Components</h3>
-
-                    <div id="componentsList">
-                        Loading...
-                    </div>
+                    <div id="componentsList">Loading components...</div>
                 </section>
-
             </aside>
 
-            <!-- CENTER -->
             <section class="editor-section">
-
-                <div class="editor-header">
-                    main.cpp
-                </div>
-
+                <div class="editor-header">main.cpp</div>
                 <textarea id="codeEditor"></textarea>
-
             </section>
 
-            <!-- RIGHT -->
             <aside class="right-panel">
-
-                <!-- HARDWARE MAPPER -->
-                <section class="panel">
-                    <h3>ESP32 Pin Mapper</h3>
-
-                    <div id="pinMapper">
-
-                        <div class="pin">GPIO 0</div>
-                        <div class="pin">GPIO 1</div>
-                        <div class="pin">GPIO 2</div>
-                        <div class="pin">GPIO 3</div>
-                        <div class="pin">GPIO 4</div>
-                        <div class="pin">GPIO 5</div>
-
+                <section class="panel connection-panel">
+                    <h3>ESP32 Connection</h3>
+                    <div class="connection-form">
+                        <label for="espIp">IP Address</label>
+                        <input id="espIp" type="text" inputmode="decimal" placeholder="192.168.1.50" autocomplete="off">
+                        <label for="espPort">WebSocket Port</label>
+                        <input id="espPort" type="number" min="1" max="65535" value="81">
+                        <button id="saveConnectionBtn">Save</button>
+                    </div>
+                    <div class="telemetry-grid">
+                        <div><span>State</span><strong id="networkState">Disconnected</strong></div>
+                        <div><span>Ping</span><strong id="networkPing">-- ms</strong></div>
+                        <div><span>TX</span><strong id="networkTx">0</strong></div>
+                        <div><span>RX</span><strong id="networkRx">0</strong></div>
                     </div>
                 </section>
 
-                <!-- JOYSTICK -->
+                <section class="panel">
+                    <h3>ESP32 Pin Mapper</h3>
+                    <div id="pinMapper">
+                        <div class="pin">GPIO 0</div>
+                        <div class="pin">GPIO 2</div>
+                        <div class="pin">GPIO 4</div>
+                        <div class="pin">GPIO 5</div>
+                        <div class="pin">GPIO 18</div>
+                        <div class="pin">GPIO 19</div>
+                        <div class="pin">GPIO 21</div>
+                        <div class="pin">GPIO 22</div>
+                    </div>
+                </section>
+
                 <section class="panel">
                     <h3>Joystick</h3>
-
                     <div id="joystickContainer">
-
                         <div id="joystickBase">
                             <div id="joystickStick"></div>
                         </div>
-
                     </div>
                 </section>
 
-                <!-- TERMINAL -->
                 <section class="panel">
                     <h3>System Console</h3>
-
                     <div id="consoleOutput"></div>
                 </section>
-
             </aside>
-
         </main>
 
-        <!-- STATUS BAR -->
         <footer class="statusbar">
-
-            <span id="connectionStatus">
-                Disconnected
-            </span>
-
-            <span id="compileStatus">
-                Ready
-            </span>
-
+            <span id="connectionStatus">Disconnected</span>
+            <span id="compileStatus">Ready</span>
         </footer>
-
     </div>
 
-    <!-- CodeMirror -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-
-    <!-- Main Module -->
     <script type="module" src="./js/main.js"></script>
-
 </body>
 </html>

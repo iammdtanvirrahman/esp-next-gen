@@ -1,7 +1,6 @@
 /* ==========================================================
    Universal Virtual IDE
    Master Stylesheet
-   Imports all application styles
    ========================================================== */
 
 @import url("./variables.css");
@@ -11,6 +10,7 @@
 @import url("./editor.css");
 @import url("./hardware.css");
 @import url("./joystick.css");
+@import url("./connection.css");
 @import url("./terminal.css");
 @import url("./statusbar.css");
 @import url("./components.css");

@@ -1,0 +1,23 @@
+/* ==========================================================
+   Modal Placeholder Styles
+   ========================================================== */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+}
+
+.modal {
+    width: min(520px, calc(100vw - 32px));
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--surface-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
