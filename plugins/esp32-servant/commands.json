@@ -1,0 +1,10 @@
+{
+  "pack": "esp32-servant",
+  "commands": [
+    {"id":"motor.move","description":"Robot motor movement"},
+    {"id":"motor.stop","description":"Stop robot motors"},
+    {"id":"sensor.distance","description":"Read distance from configured sensor"},
+    {"id":"display.write","description":"Write value to configured display"},
+    {"id":"fine.reset","description":"Reset pack-specific fine state"}
+  ]
+}
