@@ -5,7 +5,8 @@
 Install these libraries before compiling:
 
 - `WebSockets` by Markus Sattler / Links2004 (for `WebSocketsServer`)
-- `ESP32Servo` (only needed for servo commands)
+- `ESP32Servo` (for servo commands)
+- `TM1637Display` (for the fine amount display)
 - ESP32 board support package for Arduino IDE
 
 `WiFi.h` is included with the ESP32 Arduino core.
@@ -39,12 +40,29 @@ The current firmware deliberately avoids the old motor/ultrasonic GPIO conflict.
 | HC-SR04 ECHO | 33 |
 | Green LED | 15 |
 | Red LED | 2 |
+| TM1637 CLK | 22 |
+| TM1637 DIO | 21 |
 
 Change the constants in the `.ino` file when your physical wiring is different.
 
+## Fine system
+
+The firmware and web IDE use the same safety model:
+
+- detection threshold: `15 cm`
+- grace period: `30 seconds`
+- after the grace period: fine starts at `$2`
+- fine increases by `$2` every `3 seconds`
+- green LED: obstacle detected / grace period
+- red LED: fine active
+- TM1637: displays the current fine amount
+- browser dashboard: distance, state, countdown, and fine amount
+
+The web IDE sends `fineReset` when the user presses **Reset Fine**. The ESP32 also maintains its own fine state from the ultrasonic sensor, so the physical display and LEDs remain meaningful even without the browser dashboard running.
+
 ## Browser protocol
 
-The web IDE sends JSON WebSocket commands:
+Examples:
 
 ```json
 {"type":"joystick","x":0,"y":100}
@@ -57,16 +75,17 @@ The web IDE sends JSON WebSocket commands:
 {"type":"analogWrite","pin":13,"value":120}
 {"type":"servo","pin":25,"angle":90}
 {"type":"run","code":"..."}
+{"type":"fineReset"}
 ```
 
 The firmware also understands legacy text commands such as `PING`, `STOP`, `J_TX:x,y`, `DW:pin:state`, and `AW:pin:value`.
 
 ## Telemetry
 
-The ESP32 broadcasts a message approximately once per second:
+The ESP32 broadcasts approximately once per second:
 
 ```json
-{"type":"telemetry","distance":12.4,"obstacle":true,"speed":120}
+{"type":"telemetry","distance":12.4,"obstacle":true,"speed":120,"fine":2,"fineActive":true}
 ```
 
 `obstacle` becomes `true` at or below the configured `15 cm` threshold.
