@@ -68,7 +68,7 @@ export class VirtualCompiler {
             .replace(/\bINPUT\b/g, "\"INPUT\"")
             .replace(/\bOUTPUT\b/g, "\"OUTPUT\"")
             .replace(/\bNULL\b/g, "null")
-            .replace(/\b(?:uint8_t|uint16_t|uint32_t|int8_t|int16_t|int32_t|unsigned|signed|long long|long|short|double|float|int|bool|char|byte|String|size_t)\s+(?=[A-Za-z_])/g, "let ")
+            .replace(/\b(?:uint8_t|uint16_t|uint32_t|int8_t|int16_t|unsigned|signed|long long|long|short|double|float|int|bool|char|byte|String|size_t)\s+(?=[A-Za-z_])/g, "let ")
             .replace(/\bconst\s+let\b/g, "const")
             .replace(/\bvoid\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/g, (_, name, params) => `async function ${name}(${this.cleanParams(params)})`)
             .replace(/\b(?:int|float|double|long|short|byte|bool|char|String|uint8_t|uint16_t|uint32_t|size_t)\s+([A-Za-z_]\w*)\s*\(/g, "async function $1(")
@@ -92,6 +92,11 @@ export class VirtualCompiler {
             .replace(/\brandom\s*\(/g, "api.random(")
             .replace(/\brandomSeed\s*\(/g, "api.randomSeed(")
             .replace(/\byield\s*\(\s*\)/g, "await api.yield()")
+            .replace(/\breadDistanceCm\s*\(\s*\)/g, "api.distanceCm()")
+            .replace(/\bdistanceCm\s*\(\s*\)/g, "api.distanceCm()")
+            .replace(/\bisObstacleDetected\s*\(\s*\)/g, "api.obstacleDetected()")
+            .replace(/\bobstacleDetected\s*\(\s*\)/g, "api.obstacleDetected()")
+            .replace(/\bfineAmount\s*\(\s*\)/g, "api.fineAmount()")
             .replace(/\bSerial\s*\.\s*println\s*\(/g, "await api.serialPrintln(")
             .replace(/\bSerial\s*\.\s*print\s*\(/g, "await api.serialPrint(")
             .replace(/\bSerial\s*\.\s*begin\s*\(/g, "await api.serialBegin(")
@@ -139,17 +144,11 @@ export class VirtualCompiler {
                 break;
             }
 
-            functions[name] = {
-                name,
-                params: match[2].trim(),
-                body: source.slice(start, index - 1)
-            };
+            functions[name] = { name, params: match[2].trim(), body: source.slice(start, index - 1) };
             regex.lastIndex = index;
         }
 
-        if (firstFunctionIndex > 0) {
-            functions.preamble = source.slice(0, firstFunctionIndex).trim();
-        }
+        if (firstFunctionIndex > 0) functions.preamble = source.slice(0, firstFunctionIndex).trim();
         return functions;
     }
 
@@ -183,9 +182,7 @@ export class VirtualCompiler {
 
         for (const [op, regex] of patterns) {
             let match;
-            while ((match = regex.exec(source))) {
-                calls.push({ op, args: match[1] || match[2] || "", line: this.findLine(source, match.index) });
-            }
+            while ((match = regex.exec(source))) calls.push({ op, args: match[1] || match[2] || "", line: this.findLine(source, match.index) });
         }
         calls.sort((a, b) => a.line - b.line);
         return calls;
