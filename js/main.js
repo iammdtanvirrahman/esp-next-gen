@@ -8,9 +8,9 @@ import { HardwareWorkspace } from "./hardware/workspace.js";
 import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1020";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-1020";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1020";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1030";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-1030";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1030";
 
 class ESPNextGenIDE {
     constructor() {
@@ -60,7 +60,6 @@ class ESPNextGenIDE {
         document.addEventListener("network", event => this.handleNetworkEvent(event.detail));
         document.addEventListener("virtual-hardware", event => this.handleVirtualHardware(event.detail));
         document.addEventListener("virtual-input", event => this.handleVirtualInput(event.detail));
-
         document.getElementById("compileBtn")?.addEventListener("click", () => this.compile());
         document.getElementById("runBtn")?.addEventListener("click", () => this.run());
         document.getElementById("stopBtn")?.addEventListener("click", () => this.stop());
@@ -72,10 +71,7 @@ class ESPNextGenIDE {
 
     handleVirtualHardware(detail) {
         if (!detail?.state) return;
-        this.virtualBoard.update({
-            ...detail.state,
-            running: this.brain.running
-        });
+        this.virtualBoard.update({ ...detail.state, running: this.brain.running });
     }
 
     handleVirtualInput(detail) {
@@ -113,9 +109,7 @@ class ESPNextGenIDE {
         this.network.connect(ip, port);
     }
 
-    disconnect() {
-        this.network.disconnect();
-    }
+    disconnect() { this.network.disconnect(); }
 
     resetFine() {
         this.fineSystem.reset();
@@ -126,33 +120,17 @@ class ESPNextGenIDE {
 
     handleNetworkEvent(event) {
         switch (event?.type) {
-            case "connecting":
-                this.setConnectionStatus("Connecting...", "status-running");
-                this.terminal.info(`Connecting to ${event.data.ip}:${event.data.port}`);
-                break;
-            case "connected":
-                this.setConnectionStatus("Connected", "status-connected");
-                this.terminal.success(`ESP32 servant connected at ${event.data.ip}:${event.data.port}`);
-                break;
-            case "disconnected":
-                this.setConnectionStatus("Disconnected", "");
-                this.terminal.warning("ESP32 servant disconnected");
-                break;
-            case "error":
-                this.setConnectionStatus("Connection error", "status-error");
-                this.terminal.error("ESP32 network error");
-                break;
-            case "message":
-                this.handleESP32Message(event.data);
-                break;
+            case "connecting": this.setConnectionStatus("Connecting...", "status-running"); this.terminal.info(`Connecting to ${event.data.ip}:${event.data.port}`); break;
+            case "connected": this.setConnectionStatus("Connected", "status-connected"); this.terminal.success(`ESP32 servant connected at ${event.data.ip}:${event.data.port}`); break;
+            case "disconnected": this.setConnectionStatus("Disconnected", ""); this.terminal.warning("ESP32 servant disconnected"); break;
+            case "error": this.setConnectionStatus("Connection error", "status-error"); this.terminal.error("ESP32 network error"); break;
+            case "message": this.handleESP32Message(event.data); break;
         }
         this.updateNetworkTelemetry();
     }
 
     handleESP32Message(raw) {
-        if (typeof raw !== "string") return;
-        if (raw === "PONG") return;
-
+        if (typeof raw !== "string" || raw === "PONG") return;
         try {
             const message = JSON.parse(raw);
             if (message.type === "telemetry") {
@@ -160,13 +138,10 @@ class ESPNextGenIDE {
                 this.fineSystem.handleTelemetry(message);
                 this.virtualBoard.update({ telemetry: message });
                 this.updateTelemetryDisplay(message);
-            } else if (message.type === "hello") {
-                this.terminal.success(`ESP32 servant ready: ${message.device || "device"}`);
-            } else if (message.type === "ack") {
-                this.terminal.success(`Servant ACK: ${message.command || "command"}`);
-            } else if (message.type === "error") {
-                this.terminal.error(`Servant: ${message.message || "Unknown error"}`);
-            } else if (message.type === "status") {
+            } else if (message.type === "hello") this.terminal.success(`ESP32 servant ready: ${message.device || "device"}`);
+            else if (message.type === "ack") this.terminal.success(`Servant ACK: ${message.command || "command"}`);
+            else if (message.type === "error") this.terminal.error(`Servant: ${message.message || "Unknown error"}`);
+            else if (message.type === "status") {
                 this.brain.setTelemetry(message);
                 this.virtualBoard.update({ telemetry: { ...this.brain.telemetry, ...message } });
                 this.terminal.info(`Servant status: speed ${message.speed ?? "--"}, fine $${message.fine ?? 0}`);
@@ -183,21 +158,14 @@ class ESPNextGenIDE {
         if (!grid) {
             grid = document.createElement("div");
             grid.className = "telemetry-grid live-sensor-grid";
-            grid.innerHTML = `
-                <div><span>Distance</span><strong id="sensorDistance">-- cm</strong></div>
-                <div><span>Obstacle</span><strong id="sensorObstacle">--</strong></div>
-                <div><span>Fine</span><strong id="sensorFine">$0</strong></div>
-            `;
+            grid.innerHTML = `<div><span>Distance</span><strong id="sensorDistance">-- cm</strong></div><div><span>Obstacle</span><strong id="sensorObstacle">--</strong></div><div><span>Fine</span><strong id="sensorFine">$0</strong></div>`;
             panel.appendChild(grid);
         }
         const distance = document.getElementById("sensorDistance");
         const obstacle = document.getElementById("sensorObstacle");
         const fine = document.getElementById("sensorFine");
         if (distance) distance.textContent = message.distance >= 0 ? `${Number(message.distance).toFixed(1)} cm` : "No reading";
-        if (obstacle) {
-            obstacle.textContent = message.obstacle ? "Detected" : "Clear";
-            obstacle.className = message.obstacle ? "status-running" : "status-connected";
-        }
+        if (obstacle) { obstacle.textContent = message.obstacle ? "Detected" : "Clear"; obstacle.className = message.obstacle ? "status-running" : "status-connected"; }
         if (fine) fine.textContent = `$${Number(message.fine || 0)}`;
     }
 
@@ -219,19 +187,9 @@ class ESPNextGenIDE {
         const base = document.getElementById("joystickBase");
         const stick = document.getElementById("joystickStick");
         if (!base || !stick) return;
-        base.addEventListener("pointerdown", event => {
-            event.preventDefault();
-            this.joystick.active = true;
-            this.joystick.pointerId = event.pointerId;
-            base.setPointerCapture?.(event.pointerId);
-            this.updateJoystick(event);
-        });
-        base.addEventListener("pointermove", event => {
-            if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.updateJoystick(event);
-        });
-        const release = event => {
-            if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.resetJoystick();
-        };
+        base.addEventListener("pointerdown", event => { event.preventDefault(); this.joystick.active = true; this.joystick.pointerId = event.pointerId; base.setPointerCapture?.(event.pointerId); this.updateJoystick(event); });
+        base.addEventListener("pointermove", event => { if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.updateJoystick(event); });
+        const release = event => { if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.resetJoystick(); };
         base.addEventListener("pointerup", release);
         base.addEventListener("pointercancel", release);
         base.addEventListener("lostpointercapture", () => this.resetJoystick());
@@ -245,20 +203,12 @@ class ESPNextGenIDE {
         let dx = event.clientX - (rect.left + rect.width / 2);
         let dy = event.clientY - (rect.top + rect.height / 2);
         const distance = Math.hypot(dx, dy);
-        if (distance > this.joystick.maxDistance) {
-            const ratio = this.joystick.maxDistance / distance;
-            dx *= ratio;
-            dy *= ratio;
-        }
+        if (distance > this.joystick.maxDistance) { const ratio = this.joystick.maxDistance / distance; dx *= ratio; dy *= ratio; }
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
         const x = Math.round((dx / this.joystick.maxDistance) * 100);
         const y = Math.round((-dy / this.joystick.maxDistance) * 100);
         const now = performance.now();
-        if (now - this.joystick.lastSentAt > 50) {
-            this.network.sendJoystick(x, y);
-            this.joystick.lastSentAt = now;
-            this.updateNetworkTelemetry();
-        }
+        if (now - this.joystick.lastSentAt > 50) { this.network.sendJoystick(x, y); this.joystick.lastSentAt = now; this.updateNetworkTelemetry(); }
     }
 
     resetJoystick() {
@@ -315,11 +265,7 @@ class ESPNextGenIDE {
         const result = this.compile();
         if (!result?.ok) return;
         const status = document.getElementById("compileStatus");
-        if (status) {
-            status.textContent = "Brain Running";
-            status.classList.remove("status-error");
-            status.classList.add("status-running");
-        }
+        if (status) { status.textContent = "Brain Running"; status.classList.remove("status-error"); status.classList.add("status-running"); }
         this.virtualBoard.update({ running: true });
         await this.brain.run(result);
         this.virtualBoard.update({ running: this.brain.running });
