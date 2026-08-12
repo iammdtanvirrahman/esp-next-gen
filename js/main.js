@@ -8,9 +8,9 @@ import { HardwareWorkspace } from "./hardware/workspace.js";
 import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
-import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1015";
-import { BrainRuntime } from "./runtime/brain.js?v=20260812-1015";
-import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1015";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js?v=20260812-1020";
+import { BrainRuntime } from "./runtime/brain.js?v=20260812-1020";
+import { VirtualBoard } from "./simulator/virtualBoard.js?v=20260812-1020";
 
 class ESPNextGenIDE {
     constructor() {
@@ -59,6 +59,7 @@ class ESPNextGenIDE {
         window.addEventListener("keydown", event => this.keyboardShortcuts(event));
         document.addEventListener("network", event => this.handleNetworkEvent(event.detail));
         document.addEventListener("virtual-hardware", event => this.handleVirtualHardware(event.detail));
+        document.addEventListener("virtual-input", event => this.handleVirtualInput(event.detail));
 
         document.getElementById("compileBtn")?.addEventListener("click", () => this.compile());
         document.getElementById("runBtn")?.addEventListener("click", () => this.run());
@@ -75,6 +76,14 @@ class ESPNextGenIDE {
             ...detail.state,
             running: this.brain.running
         });
+    }
+
+    handleVirtualInput(detail) {
+        if (!detail?.telemetry) return;
+        this.brain.setTelemetry(detail.telemetry);
+        this.fineSystem.handleTelemetry(detail.telemetry);
+        this.updateTelemetryDisplay(detail.telemetry);
+        this.terminal.info(`SIM INPUT ${detail.kind} = ${detail.value}`);
     }
 
     initializeConnectionUI() {
@@ -110,6 +119,8 @@ class ESPNextGenIDE {
 
     resetFine() {
         this.fineSystem.reset();
+        this.virtualBoard.update({ telemetry: { ...this.brain.telemetry, fine: 0 } });
+        this.brain.setTelemetry({ fine: 0 });
         this.terminal.info("Fine state cleared from PC Brain");
     }
 
@@ -139,7 +150,8 @@ class ESPNextGenIDE {
     }
 
     handleESP32Message(raw) {
-        if (typeof raw !== "string" || raw === "PONG") return;
+        if (typeof raw !== "string") return;
+        if (raw === "PONG") return;
 
         try {
             const message = JSON.parse(raw);
@@ -156,7 +168,7 @@ class ESPNextGenIDE {
                 this.terminal.error(`Servant: ${message.message || "Unknown error"}`);
             } else if (message.type === "status") {
                 this.brain.setTelemetry(message);
-                this.virtualBoard.update({ telemetry: message });
+                this.virtualBoard.update({ telemetry: { ...this.brain.telemetry, ...message } });
                 this.terminal.info(`Servant status: speed ${message.speed ?? "--"}, fine $${message.fine ?? 0}`);
             }
         } catch {
@@ -178,11 +190,9 @@ class ESPNextGenIDE {
             `;
             panel.appendChild(grid);
         }
-
         const distance = document.getElementById("sensorDistance");
         const obstacle = document.getElementById("sensorObstacle");
         const fine = document.getElementById("sensorFine");
-
         if (distance) distance.textContent = message.distance >= 0 ? `${Number(message.distance).toFixed(1)} cm` : "No reading";
         if (obstacle) {
             obstacle.textContent = message.obstacle ? "Detected" : "Clear";
@@ -194,14 +204,8 @@ class ESPNextGenIDE {
     setConnectionStatus(text, className = "") {
         const element = document.getElementById("connectionStatus");
         const state = document.getElementById("networkState");
-        if (element) {
-            element.textContent = text;
-            element.className = className;
-        }
-        if (state) {
-            state.textContent = text;
-            state.className = className;
-        }
+        if (element) { element.textContent = text; element.className = className; }
+        if (state) { state.textContent = text; state.className = className; }
     }
 
     updateNetworkTelemetry() {
@@ -215,7 +219,6 @@ class ESPNextGenIDE {
         const base = document.getElementById("joystickBase");
         const stick = document.getElementById("joystickStick");
         if (!base || !stick) return;
-
         base.addEventListener("pointerdown", event => {
             event.preventDefault();
             this.joystick.active = true;
@@ -226,7 +229,6 @@ class ESPNextGenIDE {
         base.addEventListener("pointermove", event => {
             if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.updateJoystick(event);
         });
-
         const release = event => {
             if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.resetJoystick();
         };
@@ -239,7 +241,6 @@ class ESPNextGenIDE {
         const base = document.getElementById("joystickBase");
         const stick = document.getElementById("joystickStick");
         if (!base || !stick) return;
-
         const rect = base.getBoundingClientRect();
         let dx = event.clientX - (rect.left + rect.width / 2);
         let dy = event.clientY - (rect.top + rect.height / 2);
@@ -249,7 +250,6 @@ class ESPNextGenIDE {
             dx *= ratio;
             dy *= ratio;
         }
-
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
         const x = Math.round((dx / this.joystick.maxDistance) * 100);
         const y = Math.round((-dy / this.joystick.maxDistance) * 100);
@@ -268,7 +268,6 @@ class ESPNextGenIDE {
         const stick = document.getElementById("joystickStick");
         if (stick) stick.style.transform = "translate(0px, 0px)";
         this.network.stopMotors();
-        this.virtualBoard.update({ motors: { left: 0, right: 0, direction: "stop", speed: 0 } });
         this.updateNetworkTelemetry();
     }
 
@@ -279,12 +278,13 @@ class ESPNextGenIDE {
             const response = await fetch("./data/components.json", { cache: "no-store" });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const registry = await response.json();
+            const items = Array.isArray(registry) ? registry : (registry.components || []);
             container.innerHTML = "";
-            (registry.components || []).forEach(component => {
+            items.forEach(component => {
                 const item = document.createElement("div");
                 item.className = "component-item";
                 item.draggable = true;
-                item.innerHTML = `<div class="icon">${component.icon || "🔧"}</div><div class="meta"><div class="title">${this.escapeHTML(component.name)}</div><div class="subtitle">${this.escapeHTML(component.category)}</div></div>`;
+                item.innerHTML = `<div class="icon">${component.icon || "🔧"}</div><div class="meta"><div class="title">${this.escapeHTML(component.name)}</div><div class="subtitle">${this.escapeHTML(component.category || "Hardware")}</div></div>`;
                 item.addEventListener("dragstart", event => event.dataTransfer.setData("component", component.id));
                 container.appendChild(item);
             });
@@ -299,20 +299,12 @@ class ESPNextGenIDE {
         const status = document.getElementById("compileStatus");
         const result = this.compiler.compile(code);
         this.terminal.info(`COMPILE  ${result.sourceLines || code.split(/\r?\n/).length} source lines`);
-
         if (!result.ok) {
-            if (status) {
-                status.textContent = "Compile Error";
-                status.classList.add("status-error");
-            }
+            if (status) { status.textContent = "Compile Error"; status.classList.add("status-error"); }
             result.errors.forEach(error => this.terminal.error(`ERROR L${error.line}: ${error.message}`));
             return result;
         }
-
-        if (status) {
-            status.textContent = `Compiled (${result.instructionCount} ops)`;
-            status.classList.remove("status-error");
-        }
+        if (status) { status.textContent = `Compiled (${result.instructionCount} ops)`; status.classList.remove("status-error"); }
         result.warnings.forEach(warning => this.terminal.warning(`WARN L${warning.line}: ${warning.message}`));
         this.terminal.success(`COMPILE OK — ${result.instructionCount} hardware/API operations discovered`);
         this.terminal.info(`COMPILE OK — functions: ${result.functions.join(", ")}`);
@@ -322,24 +314,22 @@ class ESPNextGenIDE {
     async run() {
         const result = this.compile();
         if (!result?.ok) return;
-
         const status = document.getElementById("compileStatus");
         if (status) {
             status.textContent = "Brain Running";
             status.classList.remove("status-error");
             status.classList.add("status-running");
         }
-
+        this.virtualBoard.update({ running: true });
         await this.brain.run(result);
+        this.virtualBoard.update({ running: this.brain.running });
     }
 
     stop() {
         this.brain.stop();
+        this.virtualBoard.update({ running: false });
         const status = document.getElementById("compileStatus");
-        if (status) {
-            status.textContent = "Brain Ready";
-            status.classList.remove("status-running");
-        }
+        if (status) { status.textContent = "Brain Ready"; status.classList.remove("status-running"); }
     }
 
     seedDefaultWorkspace() {
@@ -347,33 +337,18 @@ class ESPNextGenIDE {
         if (status) status.textContent = "Brain Ready";
         this.terminal.info("PC Brain online");
         this.terminal.info("ESP32 = servant hardware endpoint");
-        this.terminal.info("Virtual Hardware = active");
-        this.terminal.info("Compile = virtual toolchain; Run = PC execution + virtual board + optional ESP32 forwarding");
+        this.terminal.info("Compile = virtual toolchain; Run = local execution + hardware forwarding");
+        this.terminal.info("Virtual Hardware Lab ready — change distance/fine to test sensor logic");
     }
 
     keyboardShortcuts(event) {
-        if (event.key === "F5") {
-            event.preventDefault();
-            this.run();
-            return;
-        }
-        if (event.key === "Escape") {
-            event.preventDefault();
-            this.stop();
-            return;
-        }
-        if (event.ctrlKey && event.key.toLowerCase() === "s") {
-            event.preventDefault();
-            this.editor.save();
-        }
+        if (event.key === "F5") { event.preventDefault(); this.run(); return; }
+        if (event.key === "Escape") { event.preventDefault(); this.stop(); return; }
+        if (event.ctrlKey && event.key.toLowerCase() === "s") { event.preventDefault(); this.editor.save(); }
     }
 
     escapeHTML(value) {
-        return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;");
+        return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
     }
 }
 
