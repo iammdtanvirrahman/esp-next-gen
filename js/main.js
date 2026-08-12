@@ -5,9 +5,10 @@ import { ThemeManager } from "./ui/theme.js";
 import { EditorManager } from "./editor/editor.js";
 import { Explorer } from "./explorer/explorer.js";
 import { HardwareWorkspace } from "./hardware/workspace.js";
-import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
+import { VirtualCompiler } from "./compiler/virtualCompiler.js";
+import { BrainRuntime } from "./runtime/brain.js";
 
 class ESPNextGenIDE {
     constructor() {
@@ -20,13 +21,12 @@ class ESPNextGenIDE {
         this.hardware = new HardwareWorkspace();
         this.network = new NetworkManager();
         this.terminal = new Terminal();
-        this.fineSystem = new FineSystem(this.network, this.terminal);
-
-        this.joystick = { active: false, pointerId: null, maxDistance: 54, lastSentAt: 0, x: 0, y: 0 };
+        this.compiler = new VirtualCompiler();
+        this.brain = new BrainRuntime(this.network, this.terminal);
+        this.joystick = { active: false, pointerId: null, maxDistance: 54, lastSentAt: 0 };
     }
 
     async initialize() {
-        this.logger.info("Starting ESP Next Gen IDE...");
         try {
             await this.theme.initialize();
             await this.layout.initialize();
@@ -35,18 +35,15 @@ class ESPNextGenIDE {
             await this.hardware.initialize();
             await this.network.initialize();
             await this.terminal.initialize();
-
             this.registerEvents();
             this.initializeConnectionUI();
             this.initializeJoystick();
-            this.fineSystem.initialize();
-            await this.loadComponents();
+            this.loadComponents();
             this.seedDefaultWorkspace();
-            this.logger.success("ESP Next Gen IDE Ready");
+            this.logger.success("ESP Next Gen IDE Ready — PC Brain online");
         } catch (error) {
             console.error(error);
             this.logger.error(`Startup failed: ${error.message}`);
-            this.terminal.error(`Startup failed: ${error.message}`);
         }
     }
 
@@ -54,13 +51,11 @@ class ESPNextGenIDE {
         window.addEventListener("resize", () => this.layout.resize());
         window.addEventListener("keydown", event => this.keyboardShortcuts(event));
         document.addEventListener("network", event => this.handleNetworkEvent(event.detail));
-
         document.getElementById("compileBtn")?.addEventListener("click", () => this.compile());
         document.getElementById("runBtn")?.addEventListener("click", () => this.run());
         document.getElementById("connectBtn")?.addEventListener("click", () => this.connect());
         document.getElementById("disconnectBtn")?.addEventListener("click", () => this.disconnect());
         document.getElementById("saveConnectionBtn")?.addEventListener("click", () => this.saveConnection());
-        document.getElementById("resetFineBtn")?.addEventListener("click", () => this.fineSystem.reset());
     }
 
     initializeConnectionUI() {
@@ -72,12 +67,10 @@ class ESPNextGenIDE {
     }
 
     saveConnection() {
-        const ip = document.getElementById("espIp")?.value.trim() || "";
-        const port = Number(document.getElementById("espPort")?.value || 81);
-        this.network.ip = ip;
-        this.network.port = port;
+        this.network.ip = document.getElementById("espIp")?.value.trim() || "";
+        this.network.port = Number(document.getElementById("espPort")?.value || 81);
         this.network.saveSettings();
-        this.terminal.success(`Connection settings saved: ${ip || "no IP"}:${port}`);
+        this.terminal.success(`Connection settings saved: ${this.network.ip || "no IP"}:${this.network.port}`);
     }
 
     connect() {
@@ -95,59 +88,59 @@ class ESPNextGenIDE {
     disconnect() { this.network.disconnect(); }
 
     handleNetworkEvent(event) {
-        const type = event?.type;
-        if (type === "connecting") {
-            this.setConnectionStatus("Connecting...", "status-running");
-            this.terminal.info(`Connecting to ${event.data.ip}:${event.data.port}`);
-        } else if (type === "connected") {
-            this.setConnectionStatus("Connected", "status-connected");
-            this.terminal.success(`ESP32 connected at ${event.data.ip}:${event.data.port}`);
-        } else if (type === "disconnected") {
-            this.setConnectionStatus("Disconnected", "");
-            this.terminal.warning("ESP32 disconnected");
-        } else if (type === "error") {
-            this.setConnectionStatus("Connection error", "status-error");
-            this.terminal.error("ESP32 network error");
-        } else if (type === "message") {
-            this.handleESP32Message(event.data);
+        switch (event?.type) {
+            case "connecting":
+                this.setConnectionStatus("Connecting...", "status-running");
+                this.terminal.info(`Connecting to ${event.data.ip}:${event.data.port}`);
+                break;
+            case "connected":
+                this.setConnectionStatus("Connected", "status-connected");
+                this.terminal.success(`ESP32 servant connected at ${event.data.ip}:${event.data.port}`);
+                break;
+            case "disconnected":
+                this.setConnectionStatus("Disconnected", "");
+                this.terminal.warning("ESP32 servant disconnected");
+                break;
+            case "error":
+                this.setConnectionStatus("Connection error", "status-error");
+                this.terminal.error("ESP32 network error");
+                break;
+            case "message":
+                this.handleESP32Message(event.data);
+                break;
         }
         this.updateNetworkTelemetry();
     }
 
     handleESP32Message(raw) {
-        if (typeof raw !== "string") {
-            this.terminal.info("ESP32 sent a binary packet");
-            return;
-        }
+        if (typeof raw !== "string") return;
         if (raw === "PONG") return;
-
         try {
             const message = JSON.parse(raw);
-            switch (message.type) {
-                case "hello":
-                    this.terminal.success(`ESP32 ready: ${message.device || "device"}`);
-                    break;
-                case "status":
-                    this.terminal.info(`ESP32 status: ${message.ip || "unknown IP"}, speed ${message.speed ?? "--"}`);
-                    break;
-                case "telemetry":
-                    this.fineSystem.handleTelemetry(message);
-                    break;
-                case "ack":
-                    this.terminal.success(`ESP32 ACK: ${message.command || "command"}`);
-                    break;
-                case "error":
-                    this.terminal.error(`ESP32: ${message.message || "Unknown error"}`);
-                    break;
-                case "run":
-                    this.terminal.info(`ESP32 run status: ${message.status || "unknown"}`);
-                    break;
-                default:
-                    this.terminal.info(`ESP32 ← ${raw}`);
-            }
+            if (message.type === "telemetry") this.updateTelemetryDisplay(message);
+            else if (message.type === "hello") this.terminal.success(`ESP32 servant ready: ${message.device || "device"}`);
+            else if (message.type === "ack") this.terminal.success(`Servant ACK: ${message.command || "command"}`);
+            else if (message.type === "error") this.terminal.error(`Servant: ${message.message || "Unknown error"}`);
+            else if (message.type === "status") this.terminal.info(`Servant status: speed ${message.speed ?? "--"}`);
         } catch {
             this.terminal.info(`ESP32 ← ${raw}`);
         }
+    }
+
+    updateTelemetryDisplay(message) {
+        const panel = document.querySelector(".connection-panel");
+        if (!panel) return;
+        let grid = panel.querySelector(".live-sensor-grid");
+        if (!grid) {
+            grid = document.createElement("div");
+            grid.className = "telemetry-grid live-sensor-grid";
+            grid.innerHTML = `<div><span>Distance</span><strong id="sensorDistance">-- cm</strong></div><div><span>Obstacle</span><strong id="sensorObstacle">--</strong></div>`;
+            panel.appendChild(grid);
+        }
+        document.getElementById("sensorDistance").textContent = message.distance >= 0 ? `${Number(message.distance).toFixed(1)} cm` : "No reading";
+        const obstacle = document.getElementById("sensorObstacle");
+        obstacle.textContent = message.obstacle ? "Detected" : "Clear";
+        obstacle.className = message.obstacle ? "status-running" : "status-connected";
     }
 
     setConnectionStatus(text, className = "") {
@@ -159,19 +152,15 @@ class ESPNextGenIDE {
 
     updateNetworkTelemetry() {
         const telemetry = this.network.telemetry;
-        const ping = document.getElementById("networkPing");
-        const tx = document.getElementById("networkTx");
-        const rx = document.getElementById("networkRx");
-        if (ping) ping.textContent = `${telemetry.ping || "--"} ms`;
-        if (tx) tx.textContent = String(telemetry.packetsSent);
-        if (rx) rx.textContent = String(telemetry.packetsReceived);
+        document.getElementById("networkPing")?.replaceChildren(document.createTextNode(`${telemetry.ping || "--"} ms`));
+        document.getElementById("networkTx")?.replaceChildren(document.createTextNode(String(telemetry.packetsSent)));
+        document.getElementById("networkRx")?.replaceChildren(document.createTextNode(String(telemetry.packetsReceived)));
     }
 
     initializeJoystick() {
         const base = document.getElementById("joystickBase");
         const stick = document.getElementById("joystickStick");
         if (!base || !stick) return;
-
         base.addEventListener("pointerdown", event => {
             event.preventDefault();
             this.joystick.active = true;
@@ -180,12 +169,10 @@ class ESPNextGenIDE {
             this.updateJoystick(event);
         });
         base.addEventListener("pointermove", event => {
-            if (!this.joystick.active || event.pointerId !== this.joystick.pointerId) return;
-            this.updateJoystick(event);
+            if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.updateJoystick(event);
         });
         const release = event => {
-            if (!this.joystick.active || event.pointerId !== this.joystick.pointerId) return;
-            this.resetJoystick();
+            if (this.joystick.active && event.pointerId === this.joystick.pointerId) this.resetJoystick();
         };
         base.addEventListener("pointerup", release);
         base.addEventListener("pointercancel", release);
@@ -207,7 +194,6 @@ class ESPNextGenIDE {
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
         const x = Math.round((dx / this.joystick.maxDistance) * 100);
         const y = Math.round((-dy / this.joystick.maxDistance) * 100);
-        this.joystick.x = x; this.joystick.y = y;
         const now = performance.now();
         if (now - this.joystick.lastSentAt > 50) {
             this.network.sendJoystick(x, y);
@@ -220,8 +206,7 @@ class ESPNextGenIDE {
         if (!this.joystick.active) return;
         this.joystick.active = false;
         this.joystick.pointerId = null;
-        const stick = document.getElementById("joystickStick");
-        if (stick) stick.style.transform = "translate(0px, 0px)";
+        document.getElementById("joystickStick")?.style.setProperty("transform", "translate(0px, 0px)");
         this.network.stopMotors();
         this.updateNetworkTelemetry();
     }
@@ -233,9 +218,8 @@ class ESPNextGenIDE {
             const response = await fetch("./data/components.json", { cache: "no-store" });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const registry = await response.json();
-            const components = registry.components || [];
             container.innerHTML = "";
-            components.forEach(component => {
+            (registry.components || []).forEach(component => {
                 const item = document.createElement("div");
                 item.className = "component-item";
                 item.draggable = true;
@@ -250,45 +234,45 @@ class ESPNextGenIDE {
     }
 
     compile() {
-        const status = document.getElementById("compileStatus");
         const code = this.editor.getValue();
-        if (!code.trim()) {
-            if (status) status.textContent = "No code";
-            this.terminal.error("Compile stopped: editor is empty.");
-            return false;
+        const status = document.getElementById("compileStatus");
+        const result = this.compiler.compile(code);
+        if (!result.ok) {
+            if (status) { status.textContent = "Compile Error"; status.classList.add("status-error"); }
+            result.errors.forEach(error => this.terminal.error(`Line ${error.line}: ${error.message}`));
+            return result;
         }
-        if (status) { status.textContent = "Compiling..."; status.classList.add("status-running"); }
-        this.terminal.info("Compiling Arduino/C++ project...");
-        setTimeout(() => {
-            if (status) { status.textContent = "Build OK"; status.classList.remove("status-running"); }
-            this.terminal.success(`Compile completed (${code.split("\n").length} lines)`);
-        }, 700);
-        return true;
+        if (status) { status.textContent = `Compiled (${result.instructionCount} ops)`; status.classList.remove("status-error"); }
+        result.warnings.forEach(warning => this.terminal.warning(`Line ${warning.line}: ${warning.message}`));
+        this.terminal.success(`Virtual compile successful — ${result.instructionCount} instructions generated`);
+        return result;
     }
 
-    run() {
-        if (!this.compile()) return;
-        setTimeout(() => {
-            const status = document.getElementById("compileStatus");
-            if (status) { status.textContent = "Running"; status.classList.add("status-running"); }
-            const sent = this.network.sendJSON({ type: "run", code: this.editor.getValue() });
-            this.terminal[sent ? "success" : "warning"](sent ? "Code sent to ESP32" : "ESP32 not connected; running local simulation");
-            if (!sent) setTimeout(() => {
-                if (status) { status.textContent = "Ready"; status.classList.remove("status-running"); }
-                this.terminal.success("Local simulation completed");
-            }, 1200);
-        }, 750);
+    async run() {
+        const result = this.compile();
+        if (!result?.ok) return;
+        await this.brain.run(result);
+        const status = document.getElementById("compileStatus");
+        if (status) { status.textContent = "Brain Running"; status.classList.add("status-running"); }
+    }
+
+    stop() {
+        this.brain.stop();
+        const status = document.getElementById("compileStatus");
+        if (status) { status.textContent = "Ready"; status.classList.remove("status-running"); }
     }
 
     seedDefaultWorkspace() {
-        const compileStatus = document.getElementById("compileStatus");
-        if (compileStatus) compileStatus.textContent = "Ready";
-        this.terminal.info("Workspace initialized");
-        this.terminal.info("Connect an ESP32 from the right panel to enable live control");
+        const status = document.getElementById("compileStatus");
+        if (status) status.textContent = "Brain Ready";
+        this.terminal.info("PC Brain online");
+        this.terminal.info("ESP32 is the servant hardware endpoint");
+        this.terminal.info("Compile creates virtual instructions; Run executes them on the PC and forwards hardware actions");
     }
 
     keyboardShortcuts(event) {
         if (event.key === "F5") { event.preventDefault(); this.run(); return; }
+        if (event.key === "Escape") { event.preventDefault(); this.stop(); return; }
         if (event.ctrlKey && event.key.toLowerCase() === "s") { event.preventDefault(); this.editor.save(); }
     }
 
