@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/virtual-board.css">
   <link rel="stylesheet" href="./css/circuit-builder.css">
+  <link rel="stylesheet" href="./css/debugger.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
@@ -44,6 +45,29 @@
     </section>
 
     <aside class="right-panel">
+      <section class="panel debugger-panel" id="debuggerPanel">
+        <h3>Debugger</h3>
+        <div class="debugger-toolbar">
+          <button data-action="continue">Continue</button>
+          <button data-action="pause">Pause</button>
+          <button data-action="step">Step</button>
+          <button data-action="stop">Stop</button>
+          <button data-action="clear">Clear Breakpoints</button>
+        </div>
+        <div class="debugger-grid">
+          <div class="debugger-item"><span>Status</span><strong data-debug="status">Ready</strong></div>
+          <div class="debugger-item"><span>Current</span><strong data-debug="current-line">—</strong></div>
+          <div class="debugger-item"><span>Breakpoints</span><strong data-debug="breakpoints">None</strong></div>
+          <div class="debugger-item"><span>Call stack</span><strong data-debug="stack">setup / loop</strong></div>
+        </div>
+        <div class="debugger-watch">
+          <input data-watch-input placeholder="Watch: telemetry / loopIterations">
+          <button data-action="watch">Watch</button>
+        </div>
+        <div class="debugger-item"><span>Watch values</span><strong data-debug="watch">None</strong></div>
+        <small>Click a CodeMirror line-number gutter to toggle a breakpoint.</small>
+      </section>
+
       <section class="panel connection-panel">
         <h3>Device Connection</h3>
         <div class="connection-form">
@@ -89,7 +113,8 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-<script type="module" src="./js/main.js?v=20260812-plugin-ui-1"></script>
+<script type="module" src="./js/runtime/debuggerBridge.js?v=20260812-debug-1"></script>
+<script type="module" src="./js/main.js?v=20260812-debug-1"></script>
 <script type="module" src="./js/plugins/packUi.js?v=20260812-plugin-ui-1"></script>
 </body>
 </html>
