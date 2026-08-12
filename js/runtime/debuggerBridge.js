@@ -16,7 +16,6 @@ BrainRuntime.prototype.createDebugAPI = function (compiledProgram) {
     let operationIndex = 0;
     const instructions = Array.isArray(compiledProgram?.instructions) ? compiledProgram.instructions : [];
     const aliases = { serialBegin: "Serial", serialPrint: "Serial", serialPrintln: "Serial", serialPrintf: "Serial" };
-
     const lineFor = name => {
         const target = aliases[name] || name;
         for (let i = operationIndex; i < instructions.length; i += 1) {
@@ -27,7 +26,6 @@ BrainRuntime.prototype.createDebugAPI = function (compiledProgram) {
         }
         return 0;
     };
-
     const wrapped = { ...api };
     for (const [name, fn] of Object.entries(api)) {
         if (typeof fn !== "function") continue;
@@ -44,6 +42,7 @@ BrainRuntime.prototype.createDebugAPI = function (compiledProgram) {
 
 BrainRuntime.prototype.run = async function (compiledProgram) {
     const dbg = this._ensureDebugger();
+    window.__UNIVERSAL_BRAIN__ = this;
     dbg.reset();
     dbg.start();
     this.debugProgram = compiledProgram;
@@ -95,7 +94,6 @@ function bindDebuggerUI() {
         cm.setGutterMarker(line, "debugger-breakpoint", enabled ? marker() : null);
         refresh(dbg.state());
     });
-
     panel.querySelector("[data-action=continue]")?.addEventListener("click", () => dbg.resume());
     panel.querySelector("[data-action=pause]")?.addEventListener("click", () => dbg.pause("manual"));
     panel.querySelector("[data-action=step]")?.addEventListener("click", () => dbg.requestStep());
@@ -114,7 +112,6 @@ function bindDebuggerUI() {
         if (input) input.value = "";
         refresh(dbg.state());
     });
-
     refresh(dbg.state());
     return true;
 }
