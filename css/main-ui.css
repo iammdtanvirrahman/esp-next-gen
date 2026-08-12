@@ -2,266 +2,125 @@
    Universal Virtual IDE - Main Stylesheet
    ========================================================== */
 
-/* Import design system tokens */
 @import "./variables.css";
 
-/* 1. Global Reset & Base Styles */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: var(--font-main);
     background-color: var(--bg-main);
     color: var(--text-primary);
-    overflow: hidden; /* Prevent native window scrolling */
+    overflow: hidden;
     height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
 
-/* 2. App Container Layout */
-#app {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-}
+#app { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
 
-/* 3. Header / Topbar */
 .topbar {
     height: var(--topbar-height);
     background-color: var(--bg-sidebar);
     border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--space-4);
-    z-index: var(--z-sticky);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--space-4); z-index: var(--z-sticky);
 }
 
-.logo {
-    font-size: var(--text-lg);
-    font-weight: var(--weight-bold);
-    color: var(--color-secondary);
-    letter-spacing: 0.5px;
-}
-
-.toolbar {
-    display: flex;
-    gap: var(--space-2);
-}
-
+.logo { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-secondary); letter-spacing: .5px; }
+.toolbar { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .toolbar button {
-    background-color: var(--bg-card);
-    color: var(--text-primary);
-    border: 1px solid var(--border-light);
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--radius-small);
-    cursor: pointer;
-    font-weight: var(--weight-medium);
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    background-color: var(--bg-card); color: var(--text-primary);
+    border: 1px solid var(--border-light); padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-small); cursor: pointer; font-weight: var(--weight-medium);
 }
+.toolbar button:hover { background-color: var(--bg-hover); border-color: var(--color-secondary); }
+#connectBtn { border-color: var(--color-accent); }
+#compileBtn { border-color: var(--color-warning); }
+#runBtn { border-color: var(--color-primary); }
 
-.toolbar button:hover {
-    background-color: var(--bg-hover);
-    border-color: var(--color-secondary);
-}
-
-#connectBtn {
-    border-color: var(--color-accent);
-}
-#connectBtn:hover {
-    background-color: rgba(255, 121, 198, 0.1);
-}
-
-#compileBtn {
-    border-color: var(--color-warning);
-}
-
-#runBtn {
-    border-color: var(--color-primary);
-}
-#runBtn:hover {
-    box-shadow: var(--shadow-glow);
-}
-
-/* 4. Workspace Grid System */
 .workspace {
-    flex: 1;
-    display: grid;
+    flex: 1; display: grid;
     grid-template-columns: var(--sidebar-width) 1fr var(--rightbar-width);
     height: calc(100vh - var(--topbar-height) - var(--statusbar-height));
     overflow: hidden;
 }
 
-/* Shared Panel Styling */
 .panel {
-    background-color: var(--bg-panel);
-    border-bottom: 1px solid var(--border-color);
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
+    background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+    padding: var(--space-4); display: flex; flex-direction: column;
 }
-
 .panel h3 {
-    font-size: var(--text-sm);
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    margin-bottom: var(--space-3);
-    font-weight: var(--weight-bold);
+    font-size: var(--text-sm); text-transform: uppercase; color: var(--text-muted);
+    letter-spacing: 1px; margin-bottom: var(--space-3); font-weight: var(--weight-bold);
 }
 
-/* 5. Left Sidebar */
-.sidebar {
-    background-color: var(--bg-sidebar);
-    border-right: 1px solid var(--border-color);
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    overflow-y: auto;
-}
+.sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: grid; grid-template-rows: 1fr 1fr; overflow-y: auto; }
+#fileTree { list-style: none; font-family: var(--font-code); font-size: var(--text-sm); color: var(--text-secondary); }
+#fileTree li { padding: var(--space-2) 0; cursor: pointer; }
+#fileTree li:hover { color: var(--color-info); }
 
-#fileTree {
-    list-style: none;
-    font-family: var(--font-code);
-    font-size: var(--text-sm);
-    color: var(--text-secondary);
-}
+.editor-section { background-color: var(--bg-editor); display: flex; flex-direction: column; height: 100%; }
+.editor-header { background-color: var(--bg-sidebar); padding: var(--space-2) var(--space-4); font-family: var(--font-code); font-size: var(--text-sm); border-bottom: 1px solid var(--border-color); color: var(--color-primary); }
+.CodeMirror { flex: 1; height: 100% !important; font-family: var(--font-code) !important; font-size: var(--editor-font-size) !important; line-height: var(--editor-line-height); }
 
-#fileTree li {
-    padding: var(--space-2) 0;
-    cursor: pointer;
-}
+.right-panel { background-color: var(--bg-sidebar); border-left: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column; }
 
-#fileTree li:hover {
-    color: var(--color-info);
+.connection-form { display: grid; gap: 7px; }
+.connection-form label { font-size: var(--text-xs); color: var(--text-muted); }
+.connection-form input {
+    width: 100%; padding: 9px 10px; border-radius: var(--radius-xs);
+    border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);
 }
+.connection-form button { margin-top: 4px; }
 
-/* 6. Center Editor Section */
-.editor-section {
-    background-color: var(--bg-editor);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+.telemetry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.telemetry-grid > div {
+    min-width: 0; padding: 9px; border: 1px solid var(--border-color);
+    border-radius: var(--radius-xs); background: var(--bg-card); display: flex; flex-direction: column; gap: 3px;
 }
+.telemetry-grid span { font-size: var(--text-xs); color: var(--text-muted); }
+.telemetry-grid strong { font-size: var(--text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.editor-header {
-    background-color: var(--bg-sidebar);
-    padding: var(--space-2) var(--space-4);
-    font-family: var(--font-code);
-    font-size: var(--text-sm);
-    border-bottom: 1px solid var(--border-color);
-    color: var(--color-primary);
-}
+#resetFineBtn { margin-top: 10px; }
+.status-connected { color: var(--color-success) !important; }
+.status-running { color: var(--color-warning) !important; }
+.status-error { color: var(--color-danger) !important; }
 
-/* CodeMirror Override adjustments */
-.CodeMirror {
-    flex: 1;
-    height: 100% !important;
-    font-family: var(--font-code) !important;
-    font-size: var(--editor-font-size) !important;
-    line-height: var(--editor-line-height);
-}
-
-/* 7. Right Panel Components */
-.right-panel {
-    background-color: var(--bg-sidebar);
-    border-left: 1px solid var(--border-color);
-    display: grid;
-    grid-template-rows: auto 1fr var(--console-height);
-    overflow-y: auto;
-}
-
-/* Hardware Pin Mapper */
-#pinMapper {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--pin-gap);
-}
-
+#pinMapper { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pin-gap); }
 .pin {
-    height: var(--pin-size);
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-xs);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-code);
-    font-size: var(--text-xs);
-    cursor: pointer;
+    height: var(--pin-size); background-color: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-code); font-size: var(--text-xs); cursor: pointer;
 }
+.pin:hover { border-color: var(--color-primary); background-color: var(--bg-hover); }
 
-.pin:hover {
-    border-color: var(--color-primary);
-    background-color: var(--bg-hover);
-}
-
-/* Virtual Joystick */
-#joystickContainer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-4);
-}
-
+#joystickContainer { display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
 #joystickBase {
-    width: var(--joystick-base-size);
-    height: var(--joystick-base-size);
-    background-color: var(--bg-card);
-    border-radius: var(--radius-round);
-    border: 2px solid var(--border-light);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-medium);
+    width: var(--joystick-base-size); height: var(--joystick-base-size); background-color: var(--bg-card);
+    border-radius: var(--radius-round); border: 2px solid var(--border-light); position: relative;
+    display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-medium);
+    touch-action: none;
 }
-
 #joystickStick {
-    width: var(--joystick-stick-size);
-    height: var(--joystick-stick-size);
+    width: var(--joystick-stick-size); height: var(--joystick-stick-size);
     background: radial-gradient(circle, var(--color-accent) 0%, #d4509b 100%);
-    border-radius: var(--radius-round);
-    position: absolute;
-    cursor: grab;
-    box-shadow: var(--shadow-small);
-    transition: transform var(--transition-fast) outset;
+    border-radius: var(--radius-round); position: absolute; cursor: grab; box-shadow: var(--shadow-small);
 }
 
-#joystickStick:active {
-    cursor: grabbing;
+#consoleOutput { min-height: 150px; background-color: var(--bg-console); border-radius: var(--radius-small); font-family: var(--font-code); font-size: var(--text-sm); padding: var(--space-3); color: var(--color-success); overflow-y: auto; white-space: pre-wrap; }
+.statusbar { height: var(--statusbar-height); background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-4); font-size: var(--text-xs); color: var(--text-muted); }
+#connectionStatus { color: var(--color-danger); }
+
+@media (max-width: 1100px) {
+    .workspace { grid-template-columns: var(--sidebar-width) 1fr; overflow-y: auto; }
+    .right-panel { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 }
 
-/* System Console / Terminal */
-#consoleOutput {
-    flex: 1;
-    background-color: var(--bg-console);
-    border-radius: var(--radius-small);
-    font-family: var(--font-code);
-    font-size: var(--text-sm);
-    padding: var(--space-3);
-    color: var(--color-success);
-    overflow-y: auto;
-    white-space: pre-wrap;
+@media (max-width: 720px) {
+    body { overflow: auto; height: auto; }
+    #app { height: auto; min-height: 100vh; }
+    .topbar { height: auto; padding: 10px; gap: 10px; align-items: flex-start; flex-direction: column; }
+    .workspace { grid-template-columns: 1fr; height: auto; overflow: visible; }
+    .editor-section { min-height: 460px; }
+    .right-panel { display: flex; }
+    .statusbar { height: auto; min-height: 36px; padding: 8px 12px; }
 }
-
-/* 8. Status Bar */
-.statusbar {
-    height: var(--statusbar-height);
-    background-color: var(--bg-sidebar);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--space-4);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
-
-#connectionStatus {
-    color: var(--color-danger);
-  }
-      
