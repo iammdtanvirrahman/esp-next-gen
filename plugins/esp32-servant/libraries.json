@@ -1,0 +1,8 @@
+{
+  "pack": "esp32-servant",
+  "libraries": [
+    {"id":"esp32servo","name":"ESP32Servo","header":"ESP32Servo.h"},
+    {"id":"newping","name":"NewPing","header":"NewPing.h"},
+    {"id":"tm1637","name":"TM1637Display","header":"TM1637Display.h"}
+  ]
+}
