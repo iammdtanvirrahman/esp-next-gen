@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "packs": [
+    {
+      "id": "core-generic",
+      "name": "Generic Core Interfaces",
+      "type": "core",
+      "enabledByDefault": true,
+      "components": "./data/components.json"
+    },
+    {
+      "id": "esp32-servant",
+      "name": "ESP32 Servant Pack",
+      "type": "board-plugin",
+      "enabledByDefault": false,
+      "board": "esp32-devkit-v1",
+      "components": "./plugins/esp32-servant/components.json",
+      "libraries": "./plugins/esp32-servant/libraries.json",
+      "commands": "./plugins/esp32-servant/commands.json"
+    }
+  ]
+}
