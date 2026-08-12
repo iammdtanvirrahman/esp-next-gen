@@ -1,0 +1,52 @@
+.connection-form {
+    display: grid;
+    gap: 8px;
+}
+
+.connection-form label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.connection-form input {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.18);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.connection-form input:focus {
+    border-color: rgba(125, 179, 255, 0.55);
+}
+
+.telemetry-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.telemetry-grid > div {
+    padding: 8px 9px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.telemetry-grid span,
+.telemetry-grid strong {
+    display: block;
+}
+
+.telemetry-grid span {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.telemetry-grid strong {
+    margin-top: 2px;
+    font-size: 0.85rem;
+}
