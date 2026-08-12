@@ -1,383 +1,206 @@
 /**
  * ==========================================================
- * Atomic IDE
+ * ESP Next Gen IDE
  * Editor Manager
- * CodeMirror 6 Foundation
  * ==========================================================
  */
 
 export class EditorManager {
-
     constructor() {
-
         this.editor = null;
-
         this.tabs = [];
-
         this.activeTab = null;
-
         this.modified = false;
-
     }
-
-    /**
-     * Initialize
-     */
 
     async initialize() {
-
         this.createEditor();
-
         this.registerEvents();
-
+        this.newFile("main.cpp", true);
     }
-
-    /**
-     * Create Editor
-     */
 
     createEditor() {
+        const textarea = document.getElementById("codeEditor");
+        if (!textarea) return;
 
-        const container = document.querySelector("#editor");
+        if (window.CodeMirror) {
+            this.editor = window.CodeMirror.fromTextArea(textarea, {
+                mode: "text/x-c++src",
+                theme: "dracula",
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                autofocus: true,
+                lineWrapping: false,
+                viewportMargin: Infinity
+            });
 
-        if (!container) return;
-
-        container.innerHTML = "";
-
-        this.editor = {
-
-            container,
-
-            value: ""
-
-        };
-
+            this.editor.on("change", () => {
+                if (this.activeTab) {
+                    this.activeTab.content = this.editor.getValue();
+                    this.modified = true;
+                }
+            });
+        } else {
+            this.editor = textarea;
+        }
     }
-
-    /**
-     * Register Events
-     */
 
     registerEvents() {
-
-        window.addEventListener(
-
-            "keydown",
-
-            e => this.shortcuts(e)
-
-        );
-
+        window.addEventListener("keydown", e => this.shortcuts(e));
     }
-
-    /**
-     * Shortcuts
-     */
 
     shortcuts(e) {
-
-        if (e.ctrlKey && e.key === "s") {
-
+        if (e.ctrlKey && e.key.toLowerCase() === "s") {
             e.preventDefault();
-
             this.save();
-
         }
 
-        if (e.ctrlKey && e.key === "n") {
-
+        if (e.ctrlKey && e.key.toLowerCase() === "n") {
             e.preventDefault();
-
             this.newFile();
-
         }
 
-        if (e.ctrlKey && e.key === "w") {
-
+        if (e.ctrlKey && e.key.toLowerCase() === "w") {
             e.preventDefault();
-
             this.closeTab();
-
         }
-
     }
 
-    /**
-     * New File
-     */
-
-    newFile(name = "Untitled.cpp") {
-
+    newFile(name = "Untitled.cpp", activate = true) {
         const file = {
-
             id: crypto.randomUUID(),
-
             name,
-
             language: "cpp",
-
-            content: ""
-
+            content: name === "main.cpp"
+                ? "#include <Arduino.h>\n\nvoid setup() {\n    Serial.begin(115200);\n}\n\nvoid loop() {\n    // ESP32 code here\n}\n"
+                : ""
         };
 
         this.tabs.push(file);
-
-        this.activeTab = file;
-
+        if (activate) this.activeTab = file;
         this.renderTabs();
-
+        this.syncEditor();
+        return file;
     }
-
-    /**
-     * Open File
-     */
 
     openFile(file) {
-
-        this.tabs.push(file);
-
+        if (!file?.id) file.id = crypto.randomUUID();
+        if (!this.tabs.some(tab => tab.id === file.id)) this.tabs.push(file);
         this.activeTab = file;
-
         this.renderTabs();
-
+        this.syncEditor();
     }
-
-    /**
-     * Save
-     */
 
     save() {
-
         if (!this.activeTab) return;
-
-        console.log(
-
-            "Saving",
-
-            this.activeTab.name
-
-        );
-
+        this.activeTab.content = this.readEditor();
+        localStorage.setItem(`esp-next-gen-file:${this.activeTab.name}`, this.activeTab.content);
         this.modified = false;
-
+        document.dispatchEvent(new CustomEvent("terminal-log", {
+            detail: { message: `${this.activeTab.name} saved locally`, level: "success" }
+        }));
     }
-
-    /**
-     * Close Tab
-     */
 
     closeTab(id = null) {
-
         if (!this.tabs.length) return;
 
-        if (id) {
-
-            this.tabs = this.tabs.filter(
-
-                tab => tab.id !== id
-
-            );
-
-        }
-
-        else {
-
-            this.tabs.pop();
-
-        }
-
-        this.activeTab =
-
-            this.tabs[this.tabs.length - 1] || null;
-
+        const targetId = id || this.activeTab?.id;
+        this.tabs = this.tabs.filter(tab => tab.id !== targetId);
+        this.activeTab = this.tabs[this.tabs.length - 1] || null;
         this.renderTabs();
-
+        this.syncEditor();
     }
-
-    /**
-     * Switch Tab
-     */
 
     switchTab(id) {
-
-        this.activeTab =
-
-            this.tabs.find(
-
-                tab => tab.id === id
-
-            );
-
+        const tab = this.tabs.find(item => item.id === id);
+        if (!tab) return;
+        this.activeTab = tab;
         this.renderTabs();
-
+        this.syncEditor();
     }
 
-    /**
-     * Render Tabs
-     */
-
     renderTabs() {
-
         const tabs = document.querySelector(".tabs");
-
         if (!tabs) return;
 
         tabs.innerHTML = "";
-
         this.tabs.forEach(tab => {
-
             const element = document.createElement("div");
-
-            element.className =
-
-                "tab"
-
-                +
-
-                (
-
-                    this.activeTab?.id === tab.id
-
-                    ?
-
-                    " active"
-
-                    :
-
-                    ""
-
-                );
-
-            element.innerHTML =
-
-                `
-                <span>${tab.name}</span>
-                `;
-
-            element.onclick =
-
-                () => this.switchTab(tab.id);
-
+            element.className = `tab${this.activeTab?.id === tab.id ? " active" : ""}`;
+            element.innerHTML = `<span>${this.escape(tab.name)}</span>`;
+            element.onclick = () => this.switchTab(tab.id);
             tabs.appendChild(element);
-
         });
-
     }
 
-    /**
-     * Set Content
-     */
+    syncEditor() {
+        if (!this.activeTab || !this.editor) return;
+        const content = this.activeTab.content || "";
+
+        if (typeof this.editor.setValue === "function") {
+            this.editor.setValue(content);
+            this.editor.clearHistory?.();
+        } else {
+            this.editor.value = content;
+        }
+
+        this.modified = false;
+    }
 
     setValue(text) {
-
         if (!this.activeTab) return;
-
-        this.activeTab.content = text;
-
+        this.activeTab.content = String(text);
+        this.syncEditor();
     }
-
-    /**
-     * Get Content
-     */
 
     getValue() {
-
-        if (!this.activeTab)
-
-            return "";
-
-        return this.activeTab.content;
-
+        return this.readEditor();
     }
 
-    /**
-     * Undo
-     */
-
-    undo() {
-
-        console.log("Undo");
-
+    readEditor() {
+        if (!this.editor) return this.activeTab?.content || "";
+        return typeof this.editor.getValue === "function"
+            ? this.editor.getValue()
+            : this.editor.value;
     }
 
-    /**
-     * Redo
-     */
-
-    redo() {
-
-        console.log("Redo");
-
-    }
-
-    /**
-     * Find
-     */
+    undo() { this.editor?.undo?.(); }
+    redo() { this.editor?.redo?.(); }
 
     find(keyword) {
-
-        console.log(
-
-            "Find:",
-
-            keyword
-
-        );
-
+        const query = String(keyword || "");
+        if (!query || !this.editor?.getSearchCursor) return false;
+        return Boolean(this.editor.getSearchCursor(query).findNext());
     }
 
-    /**
-     * Replace
-     */
-
-    replace(search, replace) {
-
-        console.log(
-
-            search,
-
-            replace
-
-        );
-
+    replace(search, replacement) {
+        if (!this.editor?.getSearchCursor) return false;
+        const cursor = this.editor.getSearchCursor(String(search || ""));
+        if (!cursor.findNext()) return false;
+        cursor.replace(String(replacement ?? ""));
+        return true;
     }
-
-    /**
-     * Format Code
-     */
 
     format() {
-
-        console.log(
-
-            "Formatting"
-
-        );
-
+        if (!this.editor?.getValue) return;
+        const formatted = this.editor.getValue()
+            .split("\n")
+            .map(line => line.replace(/\s+$/g, ""))
+            .join("\n");
+        this.editor.setValue(formatted);
+        this.modified = true;
     }
-
-    /**
-     * Toggle Minimap
-     */
 
     toggleMinimap() {
-
-        document
-
-            .querySelector(
-
-                ".editor-minimap"
-
-            )
-
-            ?.classList
-
-            .toggle(
-
-                "hidden"
-
-            );
-
+        document.querySelector(".editor-minimap")?.classList.toggle("hidden");
     }
 
+    escape(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+    }
 }
