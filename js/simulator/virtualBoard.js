@@ -34,7 +34,7 @@ export class VirtualBoard {
 
             <div class="virtual-board-controls">
                 <label>Ultrasonic distance
-                    <input id="virtualDistanceInput" type="range" min="0" max="100" value="50" step="0.5">
+                    <input id="virtualDistanceInput" type="range" min="0" max="400" value="50" step="0.5">
                 </label>
                 <div class="virtual-control-row">
                     <button data-sim-distance="5">5cm</button>
@@ -43,12 +43,20 @@ export class VirtualBoard {
                     <button data-sim-distance="100">100cm</button>
                 </div>
                 <label>Fine amount
-                    <input id="virtualFineInput" type="number" min="0" step="2" value="0">
+                    <input id="virtualFineInput" type="number" min="0" max="100" step="2" value="0">
                 </label>
                 <div class="virtual-control-row">
-                    <button data-sim-fine="0">Reset $0</button>
+                    <button data-sim-fine="0">$0</button>
                     <button data-sim-fine="2">$2</button>
                     <button data-sim-fine="10">$10</button>
+                    <button data-sim-fine="50">$50</button>
+                </div>
+                <div class="virtual-control-row">
+                    <button data-sim-scenario="clear">Clear</button>
+                    <button data-sim-scenario="obstacle">Obstacle</button>
+                    <button data-sim-scenario="fine">Fine Active</button>
+                    <button id="virtualResetBtn">Reset Lab</button>
+                    <button id="virtualSnapshotBtn">Save State</button>
                 </div>
             </div>
 
@@ -81,6 +89,7 @@ export class VirtualBoard {
             </div>
 
             <div class="virtual-pins" id="virtualPinGrid"></div>
+            <small class="sim-hint">Virtual inputs affect the PC Brain. When ESP32 is connected, compatible outputs are forwarded to the servant.</small>
         `;
     }
 
@@ -88,13 +97,8 @@ export class VirtualBoard {
         const distanceInput = this.root.querySelector("#virtualDistanceInput");
         const fineInput = this.root.querySelector("#virtualFineInput");
 
-        distanceInput?.addEventListener("input", () => {
-            this.emitInput("distance", Number(distanceInput.value));
-        });
-
-        fineInput?.addEventListener("change", () => {
-            this.emitInput("fine", Math.max(0, Number(fineInput.value) || 0));
-        });
+        distanceInput?.addEventListener("input", () => this.emitInput("distance", Number(distanceInput.value)));
+        fineInput?.addEventListener("change", () => this.emitInput("fine", Math.max(0, Number(fineInput.value) || 0)));
 
         this.root.querySelectorAll("[data-sim-distance]").forEach(button => {
             button.addEventListener("click", () => {
@@ -111,6 +115,13 @@ export class VirtualBoard {
                 this.emitInput("fine", value);
             });
         });
+
+        this.root.querySelectorAll("[data-sim-scenario]").forEach(button => {
+            button.addEventListener("click", () => this.applyScenario(button.dataset.simScenario));
+        });
+
+        this.root.querySelector("#virtualResetBtn")?.addEventListener("click", () => this.resetLab());
+        this.root.querySelector("#virtualSnapshotBtn")?.addEventListener("click", () => this.saveSnapshot());
     }
 
     emitInput(kind, value) {
@@ -120,12 +131,58 @@ export class VirtualBoard {
                 distance: value,
                 obstacle: value > 0 && value <= 15
             } : {
-                fine: value
+                fine: value,
+                obstacle: this.state.telemetry.obstacle || value > 0
             })
         };
         this.update({ telemetry });
         document.dispatchEvent(new CustomEvent("virtual-input", {
             detail: { kind, value, telemetry }
+        }));
+    }
+
+    applyScenario(name) {
+        const distanceInput = this.root.querySelector("#virtualDistanceInput");
+        const fineInput = this.root.querySelector("#virtualFineInput");
+        const scenarios = {
+            clear: { distance: 100, obstacle: false, fine: 0 },
+            obstacle: { distance: 10, obstacle: true, fine: 0 },
+            fine: { distance: 10, obstacle: true, fine: 10 }
+        };
+        const scenario = scenarios[name];
+        if (!scenario) return;
+        if (distanceInput) distanceInput.value = String(scenario.distance);
+        if (fineInput) fineInput.value = String(scenario.fine);
+        this.update({ telemetry: scenario });
+        document.dispatchEvent(new CustomEvent("virtual-input", {
+            detail: { kind: "scenario", value: name, telemetry: { ...this.state.telemetry } }
+        }));
+    }
+
+    resetLab() {
+        const defaults = this.emptyState();
+        this.state = defaults;
+        const distanceInput = this.root.querySelector("#virtualDistanceInput");
+        const fineInput = this.root.querySelector("#virtualFineInput");
+        if (distanceInput) distanceInput.value = "50";
+        if (fineInput) fineInput.value = "0";
+        this.render();
+        document.dispatchEvent(new CustomEvent("virtual-input", {
+            detail: { kind: "reset", value: "lab", telemetry: { ...this.state.telemetry } }
+        }));
+    }
+
+    saveSnapshot() {
+        const data = JSON.stringify(this.state, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "esp-next-gen-virtual-state.json";
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+        document.dispatchEvent(new CustomEvent("virtual-input", {
+            detail: { kind: "snapshot", value: "saved", telemetry: { ...this.state.telemetry } }
         }));
     }
 
@@ -178,6 +235,9 @@ export class VirtualBoard {
         }
         if (fine) fine.textContent = `$${Number(s.telemetry.fine || 0)}`;
         if (loop) loop.textContent = `Loop ${s.loopIterations || 0}`;
+
+        if (distanceInput && document.activeElement !== distanceInput) distanceInput.value = String(Math.max(0, Number(s.telemetry.distance) || 0));
+        if (fineInput && document.activeElement !== fineInput) fineInput.value = String(Number(s.telemetry.fine || 0));
 
         const distanceInput = this.root.querySelector("#virtualDistanceInput");
         const fineInput = this.root.querySelector("#virtualFineInput");
