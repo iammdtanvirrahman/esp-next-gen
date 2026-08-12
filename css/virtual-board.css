@@ -1,0 +1,145 @@
+.virtual-board {
+    min-height: 240px;
+    gap: 12px;
+}
+
+.virtual-board-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.sim-chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    font-size: 0.68rem;
+}
+
+.sim-chip.sim-running {
+    color: #7ef0c6;
+    border-color: rgba(126, 240, 198, 0.5);
+}
+
+.virtual-board-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.sim-card {
+    min-height: 72px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.025);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sim-card span,
+.virtual-leds span {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.sim-card strong {
+    font-size: 1rem;
+}
+
+.sim-card small {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.virtual-leds {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.virtual-leds > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.virtual-leds b {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.virtual-leds i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #394055;
+    box-shadow: 0 0 0 transparent;
+}
+
+.virtual-leds i.on {
+    background: #8de7c0;
+    box-shadow: 0 0 10px rgba(141, 231, 192, 0.7);
+}
+
+.virtual-pins {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+    max-height: 112px;
+    overflow: auto;
+}
+
+.virtual-pin {
+    padding: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.virtual-pin span {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.virtual-pin b {
+    font-size: 0.58rem;
+    font-weight: 500;
+    color: var(--color-primary);
+}
+
+.virtual-pin strong {
+    font-size: 0.78rem;
+}
+
+.sim-empty {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+}
+
+@media (max-width: 720px) {
+    .virtual-board-grid,
+    .virtual-leds {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .virtual-pins {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
