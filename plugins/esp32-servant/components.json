@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "pack": "esp32-servant",
+  "components": [
+    {"id":"ultrasonic","name":"HC-SR04","category":"Sensor","icon":"📡","library":"NewPing.h","pins":[{"name":"TRIG","type":"DigitalOutput"},{"name":"ECHO","type":"DigitalInput"}]},
+    {"id":"servo","name":"Servo","category":"Actuator","icon":"⚙","library":"ESP32Servo.h","pins":[{"name":"PWM","type":"PWM"}]},
+    {"id":"tm1637","name":"TM1637 Display","category":"Display","icon":"▦","library":"TM1637Display.h","pins":[{"name":"CLK","type":"Digital"},{"name":"DIO","type":"Digital"}]},
+    {"id":"l298n","name":"L298N Motor Driver","category":"Motor","icon":"↻","pins":[{"name":"IN1","type":"DigitalOutput"},{"name":"IN2","type":"DigitalOutput"},{"name":"IN3","type":"DigitalOutput"},{"name":"IN4","type":"DigitalOutput"},{"name":"ENA","type":"PWM"},{"name":"ENB","type":"PWM"}]}
+  ]
+}
