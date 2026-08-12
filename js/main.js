@@ -5,6 +5,7 @@ import { ThemeManager } from "./ui/theme.js";
 import { EditorManager } from "./editor/editor.js";
 import { Explorer } from "./explorer/explorer.js";
 import { HardwareWorkspace } from "./hardware/workspace.js";
+import { FineSystem } from "./hardware/fine-system.js";
 import { NetworkManager } from "./network/network.js";
 import { Terminal } from "./terminal/terminal.js";
 import { VirtualCompiler } from "./compiler/virtualCompiler.js";
@@ -23,6 +24,7 @@ class ESPNextGenIDE {
         this.terminal = new Terminal();
         this.compiler = new VirtualCompiler();
         this.brain = new BrainRuntime(this.network, this.terminal);
+        this.fineSystem = new FineSystem(this.network, this.terminal);
         this.joystick = { active: false, pointerId: null, maxDistance: 54, lastSentAt: 0 };
     }
 
@@ -35,6 +37,7 @@ class ESPNextGenIDE {
             await this.hardware.initialize();
             await this.network.initialize();
             await this.terminal.initialize();
+            this.fineSystem.initialize();
             this.registerEvents();
             this.initializeConnectionUI();
             this.initializeJoystick();
@@ -58,6 +61,7 @@ class ESPNextGenIDE {
         document.getElementById("connectBtn")?.addEventListener("click", () => this.connect());
         document.getElementById("disconnectBtn")?.addEventListener("click", () => this.disconnect());
         document.getElementById("saveConnectionBtn")?.addEventListener("click", () => this.saveConnection());
+        document.getElementById("resetFineBtn")?.addEventListener("click", () => this.resetFine());
     }
 
     initializeConnectionUI() {
@@ -91,6 +95,11 @@ class ESPNextGenIDE {
         this.network.disconnect();
     }
 
+    resetFine() {
+        this.fineSystem.reset();
+        this.terminal.info("Fine state cleared from PC Brain");
+    }
+
     handleNetworkEvent(event) {
         switch (event?.type) {
             case "connecting":
@@ -119,10 +128,12 @@ class ESPNextGenIDE {
     handleESP32Message(raw) {
         if (typeof raw !== "string") return;
         if (raw === "PONG") return;
+
         try {
             const message = JSON.parse(raw);
             if (message.type === "telemetry") {
                 this.brain.setTelemetry(message);
+                this.fineSystem.handleTelemetry(message);
                 this.updateTelemetryDisplay(message);
             } else if (message.type === "hello") {
                 this.terminal.success(`ESP32 servant ready: ${message.device || "device"}`);
@@ -275,7 +286,6 @@ class ESPNextGenIDE {
         const code = this.editor.getValue();
         const status = document.getElementById("compileStatus");
         const result = this.compiler.compile(code);
-
         this.terminal.info(`COMPILE  ${result.sourceLines || code.split(/\r?\n/).length} source lines`);
 
         if (!result.ok) {
