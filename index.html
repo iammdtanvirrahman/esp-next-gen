@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#0b1020">
     <title>ESP Next Gen IDE</title>
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/virtual-board.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
@@ -68,6 +69,10 @@
                 <button id="resetFineBtn">Reset Fine</button>
             </section>
 
+            <section class="panel virtual-board" id="virtualBoardPanel">
+                <div id="virtualBoard"></div>
+            </section>
+
             <section class="panel">
                 <h3>ESP32 Pin Mapper</h3>
                 <div id="pinMapper">
@@ -100,6 +105,6 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
-<script type="module" src="./js/main.js?v=20260812-1003"></script>
+<script type="module" src="./js/main.js?v=20260812-1012"></script>
 </body>
 </html>
