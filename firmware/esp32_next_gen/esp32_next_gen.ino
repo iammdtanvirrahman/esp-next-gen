@@ -16,23 +16,22 @@
  *   pinMode
  *   digitalWrite
  *   digitalRead
- *   analogWrite
- *   analogRead
+ *   analogWrite / pwm
+ *   analogRead / adc
  *   servo
  *   servoDetach
  *   tone
  *   noTone
  *
- * Accepted command keys:
- *   type   (current Next Gen protocol)
- *   cmd    (generic alias)
- *
  * No motor, car, ultrasonic, fine, or application-specific logic lives here.
+ *
+ * ArduinoDroid note:
+ *   No ESP32Servo external library is required.
+ *   Servo output uses the ESP32 Arduino core LEDC API.
  */
 
 #include <WiFi.h>
 #include <WebSocketsServer.h>
-#include <ESP32Servo.h>
 
 // ============================================================
 // WIFI / NETWORK
@@ -49,8 +48,12 @@ WebSocketsServer webSocket(WS_PORT);
 // SERVO STATE
 // ============================================================
 
-Servo servoDevice;
 int activeServoPin = -1;
+
+constexpr uint32_t SERVO_FREQUENCY = 50;
+constexpr uint8_t SERVO_RESOLUTION = 16;
+constexpr uint32_t SERVO_MIN_US = 500;
+constexpr uint32_t SERVO_MAX_US = 2500;
 
 // ============================================================
 // COMMAND HELPERS
@@ -120,9 +123,14 @@ bool parseBool(const String& value) {
 }
 
 int parsePinMode(const String& value) {
-  if (value == "INPUT" || value == "0") return INPUT;
-  if (value == "OUTPUT" || value == "1") return OUTPUT;
-  if (value == "INPUT_PULLUP" || value == "2") return INPUT_PULLUP;
+  if (value == "INPUT") return INPUT;
+  if (value == "OUTPUT") return OUTPUT;
+  if (value == "INPUT_PULLUP") return INPUT_PULLUP;
+
+  const int numeric = value.toInt();
+  if (numeric == INPUT || numeric == OUTPUT || numeric == INPUT_PULLUP) {
+    return numeric;
+  }
 
   return -1;
 }
@@ -224,7 +232,6 @@ void executeDigitalRead(uint8_t client, const String& json) {
     return;
   }
 
-  pinMode(pin, INPUT);
   const int value = digitalRead(pin);
 
   String response = "{";
@@ -294,27 +301,52 @@ void executeAnalogRead(uint8_t client, const String& json) {
 }
 
 // ============================================================
-// SERVO
+// SERVO - ESP32 CORE LEDC, NO EXTERNAL SERVO LIBRARY
 // ============================================================
+
+uint32_t servoDutyFromMicroseconds(uint32_t microseconds) {
+  const uint32_t periodUs = 1000000UL / SERVO_FREQUENCY;
+  const uint32_t maxDuty = (1UL << SERVO_RESOLUTION) - 1UL;
+  return (uint32_t)((uint64_t)microseconds * maxDuty / periodUs);
+}
+
+bool executeServoAttach(int pin) {
+  if (!validGPIO(pin)) return false;
+
+  if (activeServoPin != pin) {
+    if (activeServoPin >= 0) {
+      ledcDetach(activeServoPin);
+    }
+
+    if (!ledcAttach(pin, SERVO_FREQUENCY, SERVO_RESOLUTION)) {
+      activeServoPin = -1;
+      return false;
+    }
+
+    activeServoPin = pin;
+  }
+
+  return true;
+}
 
 void executeServo(uint8_t client, const String& json) {
   const int pin = parsePin(json);
   int angle = readValue(json, "angle").toInt();
 
-  if (!validGPIO(pin)) {
-    sendError(client, "Invalid servo GPIO");
+  angle = constrain(angle, 0, 180);
+
+  if (!executeServoAttach(pin)) {
+    sendError(client, "Unable to attach servo PWM");
     return;
   }
 
-  angle = constrain(angle, 0, 180);
+  const uint32_t pulseUs = SERVO_MIN_US +
+                           (uint32_t)((SERVO_MAX_US - SERVO_MIN_US) * angle / 180);
 
-  if (activeServoPin != pin) {
-    if (activeServoPin >= 0) servoDevice.detach();
-    activeServoPin = pin;
-    servoDevice.attach(activeServoPin);
-  }
-
-  servoDevice.write(angle);
+  ledcWrite(
+    activeServoPin,
+    servoDutyFromMicroseconds(pulseUs)
+  );
 
   String response = "{";
   response += "\"type\":\"ack\",";
@@ -330,7 +362,8 @@ void executeServo(uint8_t client, const String& json) {
 
 void executeServoDetach(uint8_t client) {
   if (activeServoPin >= 0) {
-    servoDevice.detach();
+    ledcWrite(activeServoPin, 0);
+    ledcDetach(activeServoPin);
     activeServoPin = -1;
   }
 
@@ -385,9 +418,6 @@ void executeCommand(uint8_t client, const String& json) {
   }
 
   if (command == "stop") {
-    // Generic endpoint has no project-specific motor state to stop.
-    // Release active servo only when explicitly requested; otherwise
-    // the command is simply acknowledged.
     sendJSON(client, "{\"type\":\"ack\",\"command\":\"stop\"}");
     return;
   }
