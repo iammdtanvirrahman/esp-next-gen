@@ -1,252 +1,805 @@
-Analyzing sketch dependencies ...
-Analyzing sketch_aug19a.cpp
-Command line:
-/files/sdkEsp32/tools/esp-x32/2507/bin/xtensa-esp32-elf-g++
--isysroot
-/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf
--c
-@/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/flags/cpp_flags
--w
--Werror=return-type
--w
--x
-c++
--E
--CC
--DF_CPU=240000000L
--DARDUINO=10607
--DIDE="ArduinoDroid"
--DARDUINO_ESP32_DEV
--DARDUINO_ARCH_ESP32
--DARDUINO_BOARD="ESP32_DEV"
--DARDUINO_VARIANT="esp32"
--DARDUINO_PARTITION_default
--DARDUINO_FQBN="esp32:esp32:EraseFlash=none,PartitionScheme=default,ZigbeeMode=default,FlashFreq=80,LoopCore=1,JTAGAdapter=default,CPUFreq=240,PSRAM=disabled,EventsCore=1,FlashMode=qio,FlashSize=4M,DebugLevel=none,UploadSpeed=921600"
--DESP32=ESP32
--DCORE_DEBUG_LEVEL=0
--DARDUINO_RUNNING_CORE=1
--DARDUINO_EVENT_RUNNING_CORE=1
-@/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/flags/defines
--iprefix
-/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/
--H
--I/files/sdkEsp32/hardware/esp32/3.3.5/cores/esp32
--I/files/sdkEsp32/hardware/esp32/3.3.5/variants/esp32
-@/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/flags/includes
--I/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/esp32
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/../../../../xtensa-esp-elf/lib/esp32
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/lib/esp32
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/../../../../xtensa-esp-elf/lib
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/lib
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/usr/lib
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include
--I/files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include-fixed
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf/esp32
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf
--I/files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include
--I/files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/qio_qspi/include
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ArduinoOTA/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/AsyncUDP/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/BLE/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/BluetoothSerial/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/DNSServer/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/EEPROM/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESP32/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESP_HostedOTA/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESP_I2S/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESP_NOW/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESP_SR/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/ESPmDNS/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Ethernet/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/FFat/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/FS/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/HTTPClient/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/HTTPUpdate/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/HTTPUpdateServer/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Hash/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Insights/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/LittleFS/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Matter/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/NetBIOS/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Network/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/NetworkClientSecure/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/OpenThread/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/PPP/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Preferences/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/RainMaker/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/SD/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/SD_MMC/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/SPI/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/SPIFFS/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/SimpleBLE/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/TFLiteMicro/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Ticker/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/USB/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Update/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/WebServer/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/WiFi/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/WiFiProv/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Wire/src
--I/files/sdkEsp32/hardware/esp32/3.3.5/libraries/Zigbee/src
--I/files/libraries/Ethernet/src
--I/files/libraries/Firmata
--I/files/libraries/Keyboard/src
--I/files/libraries/LiquidCrystal/src
--I/files/libraries/Mouse/src
--I/files/libraries/SD/src
--I/files/libraries/Servo/src
--I/files/libraries/Stepper/src
--I/files/libraries/TFT/src
--I/files/build
--I/files/sketch
-/files/build/sketch_aug19a.cpp
-Output:
-. /files/sdkEsp32/hardware/esp32/3.3.5/cores/esp32/Arduino.h
-.. /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-.. /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdint.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/stdint.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/_default_types.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/features.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_newlib_version.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_intsup.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/features.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_stdint.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/_default_types.h
-.. /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdarg.h
-.. /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-.. /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/newlib/platform_include/stdio.h
-... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/qio_qspi/include/sdkconfig.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/stdio.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/newlib.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_newlib_version.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/config.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/ieeefp.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/features.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/cdefs.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/_default_types.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/features.h
-..... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-.... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-.... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdarg.h
-.... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/newlib/platform_include/sys/reent.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/reent.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-...... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-...... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_types.h
-....... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-....... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/newlib.h
-....... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/_types.h
-........ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/_default_types.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/newlib/platform_include/sys/lock.h
-....... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/lock.h
-........ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/newlib.h
-........ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/newlib/platform_include/assert.h
-....... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/stdlib.h
-........ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/cstdlib
-......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf/esp32/bits/c++config.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf/esp32/bits/os_defines.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf/esp32/bits/cpu_defines.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/pstl/pstl_config.h
-......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/stdlib.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/stdlib.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/ieeefp.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-........... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/cdefs.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/machine/stdlib.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/alloca.h
-............ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_locale.h
-............ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/newlib.h
-......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/bits/std_abs.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/xtensa-esp-elf/esp32/bits/c++config.h
-.......... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/stdlib.h
-........... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/stdlib.h
-....... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/assert.h
-........ /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_types.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/stdio.h
-.. /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/stdlib.h
-.. /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/string.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/cdefs.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/features.h
-... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_locale.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/strings.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/cdefs.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_types.h
-.... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_locale.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/string.h
-.. /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/inttypes.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/newlib.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_intsup.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/_ansi.h
-... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/sys/_locale.h
-.. /files/sdkEsp32/hardware/esp32/3.3.5/cores/esp32/esp_arduino_version.h
-.. /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/FreeRTOS-Kernel/include/freertos/FreeRTOS.h
-... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/config/include/freertos/FreeRTOSConfig.h
-.... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/config/xtensa/include/freertos/FreeRTOSConfig_arch.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa_config.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/hal.h
-....... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stddef.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/hal.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtensa-versions.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core-isa.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core-matmap.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/tie.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/system.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa_context.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/tie.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/corebits.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/system.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime-frames.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/FreeRTOS-Kernel/include/freertos/projdefs.h
-... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/FreeRTOS-Kernel/include/freertos/portable.h
-.... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/FreeRTOS-Kernel/include/freertos/deprecated_definitions.h
-.... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/freertos/FreeRTOS-Kernel/portable/xtensa/include/freertos/portmacro.h
-..... /files/sdkEsp32/tools/esp-x32/2507/xtensa-esp-elf/include/c++/14.2.0/stdlib.h
-..... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-..... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdarg.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/hal.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/specreg.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/corebits.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime-core-state.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime-frames.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/tie.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xt_instr_macros.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime.h
-..... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/esp_hw_support/include/spinlock.h
-...... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-...... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/esp_hw_support/include/esp_cpu.h
-....... /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/soc/esp32/include/soc/soc_caps.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa_api.h
-........ /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/hal.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa_context.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xt_utils.h
-........ /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/include/stdbool.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core-isa.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/core.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/extreg.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/esp32/include/xtensa/config/specreg.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/xtensa/include/xtensa/xtruntime.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/esp_common/include/esp_bit_defs.h
-........ /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/esp_common/include/esp_attr.h
-....... /files/sdkEsp32/tools/esp32-arduino-libs/idf-release_v5.5-9bb7aa84-v2/esp32/include/esp_hw_support/include/esp_intr_alloc.h
-........ /files/sdkEsp32/tools/esp-x32/2507/lib/gcc/xtensa-esp-elf/14.2.0/includ
+#include <WiFi.h>
+#include <WebSocketsServer.h>
+
+// =====================================================
+// ESP NEXT GEN - GENERIC HARDWARE SERVANT
+// ArduinoDroid / ESP32
+// =====================================================
+
+const char* WIFI_SSID = "taifa";
+const char* WIFI_PASSWORD = "20072311";
+
+#define WS_PORT 81
+
+WebSocketsServer webSocket(WS_PORT);
+
+// =====================================================
+// JSON VALUE READER
+// Simple parser - no ArduinoJson needed
+// =====================================================
+
+String getValue(String json, String key)
+{
+  String target = "\"" + key + "\"";
+
+  int keyPos = json.indexOf(target);
+
+  if (keyPos < 0)
+    return "";
+
+  int colon = json.indexOf(":", keyPos);
+
+  if (colon < 0)
+    return "";
+
+  int start = colon + 1;
+
+  while (
+    start < json.length() &&
+    (
+      json[start] == ' ' ||
+      json[start] == '\t'
+    )
+  )
+  {
+    start++;
+  }
+
+  if (start >= json.length())
+    return "";
+
+  // Quoted value
+  if (json[start] == '"')
+  {
+    start++;
+
+    int end = json.indexOf('"', start);
+
+    if (end < 0)
+      return "";
+
+    return json.substring(start, end);
+  }
+
+  // Normal value
+  int end = start;
+
+  while (
+    end < json.length() &&
+    json[end] != ',' &&
+    json[end] != '}'
+  )
+  {
+    end++;
+  }
+
+  String value = json.substring(start, end);
+  value.trim();
+
+  return value;
+}
+
+// =====================================================
+// COMMAND NAME
+// Supports both:
+// "type"
+// "cmd"
+// =====================================================
+
+String getCommand(String json)
+{
+  String command = getValue(json, "type");
+
+  if (command.length() == 0)
+    command = getValue(json, "cmd");
+
+  return command;
+}
+
+// =====================================================
+// SEND ERROR
+// =====================================================
+
+void sendError(
+  uint8_t client,
+  String message
+)
+{
+  String response =
+    "{\"type\":\"error\",\"message\":\"";
+
+  response += message;
+
+  response += "\"}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// SEND ACK
+// =====================================================
+
+void sendAck(
+  uint8_t client,
+  String command
+)
+{
+  String response =
+    "{\"type\":\"ack\",\"command\":\"";
+
+  response += command;
+
+  response += "\"}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// CHECK GPIO
+// =====================================================
+
+bool validPin(int pin)
+{
+  return (
+    pin >= 0 &&
+    pin <= 39
+  );
+}
+
+// =====================================================
+// PIN MODE
+// =====================================================
+
+void commandPinMode(
+  uint8_t client,
+  String json
+)
+{
+  int pin =
+    getValue(
+      json,
+      "pin"
+    ).toInt();
+
+  String mode =
+    getValue(
+      json,
+      "mode"
+    );
+
+  if (!validPin(pin))
+  {
+    sendError(
+      client,
+      "Invalid GPIO"
+    );
+
+    return;
+  }
+
+  if (mode == "OUTPUT")
+  {
+    pinMode(
+      pin,
+      OUTPUT
+    );
+  }
+  else if (mode == "INPUT")
+  {
+    pinMode(
+      pin,
+      INPUT
+    );
+  }
+  else if (
+    mode == "INPUT_PULLUP"
+  )
+  {
+    pinMode(
+      pin,
+      INPUT_PULLUP
+    );
+  }
+  else if (mode == "OUTPUT")
+  {
+    pinMode(
+      pin,
+      OUTPUT
+    );
+  }
+  else
+  {
+    // Also accept Arduino numeric constants
+    int numericMode =
+      mode.toInt();
+
+    pinMode(
+      pin,
+      numericMode
+    );
+  }
+
+  String response =
+    "{\"type\":\"ack\",\"command\":\"pinMode\",\"pin\":";
+
+  response += pin;
+
+  response += "}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// DIGITAL WRITE
+// =====================================================
+
+void commandDigitalWrite(
+  uint8_t client,
+  String json
+)
+{
+  int pin =
+    getValue(
+      json,
+      "pin"
+    ).toInt();
+
+  String value =
+    getValue(
+      json,
+      "state"
+    );
+
+  if (value.length() == 0)
+  {
+    value =
+      getValue(
+        json,
+        "value"
+      );
+  }
+
+  if (!validPin(pin))
+  {
+    sendError(
+      client,
+      "Invalid GPIO"
+    );
+
+    return;
+  }
+
+  bool state =
+    (
+      value == "true" ||
+      value == "1" ||
+      value == "HIGH"
+    );
+
+  pinMode(
+    pin,
+    OUTPUT
+  );
+
+  digitalWrite(
+    pin,
+    state ? HIGH : LOW
+  );
+
+  String response =
+    "{\"type\":\"ack\",\"command\":\"digitalWrite\",\"pin\":";
+
+  response += pin;
+
+  response += ",\"value\":";
+
+  response += (
+    state
+    ? "true"
+    : "false"
+  );
+
+  response += "}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// DIGITAL READ
+// =====================================================
+
+void commandDigitalRead(
+  uint8_t client,
+  String json
+)
+{
+  int pin =
+    getValue(
+      json,
+      "pin"
+    ).toInt();
+
+  if (!validPin(pin))
+  {
+    sendError(
+      client,
+      "Invalid GPIO"
+    );
+
+    return;
+  }
+
+  int value =
+    digitalRead(
+      pin
+    );
+
+  String response =
+    "{\"type\":\"digitalRead\",\"pin\":";
+
+  response += pin;
+
+  response += ",\"value\":";
+
+  response += value;
+
+  response += "}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// ANALOG WRITE / PWM
+// =====================================================
+
+void commandAnalogWrite(
+  uint8_t client,
+  String json
+)
+{
+  int pin =
+    getValue(
+      json,
+      "pin"
+    ).toInt();
+
+  int value =
+    getValue(
+      json,
+      "value"
+    ).toInt();
+
+  if (!validPin(pin))
+  {
+    sendError(
+      client,
+      "Invalid GPIO"
+    );
+
+    return;
+  }
+
+  value =
+    constrain(
+      value,
+      0,
+      255
+    );
+
+  pinMode(
+    pin,
+    OUTPUT
+  );
+
+  // ESP32 Arduino core supports analogWrite()
+  analogWrite(
+    pin,
+    value
+  );
+
+  String response =
+    "{\"type\":\"ack\",\"command\":\"analogWrite\",\"pin\":";
+
+  response += pin;
+
+  response += ",\"value\":";
+
+  response += value;
+
+  response += "}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// ANALOG READ / ADC
+// =====================================================
+
+void commandAnalogRead(
+  uint8_t client,
+  String json
+)
+{
+  int pin =
+    getValue(
+      json,
+      "pin"
+    ).toInt();
+
+  if (!validPin(pin))
+  {
+    sendError(
+      client,
+      "Invalid ADC GPIO"
+    );
+
+    return;
+  }
+
+  int value =
+    analogRead(
+      pin
+    );
+
+  String response =
+    "{\"type\":\"analogRead\",\"pin\":";
+
+  response += pin;
+
+  response += ",\"value\":";
+
+  response += value;
+
+  response += "}";
+
+  webSocket.sendTXT(
+    client,
+    response
+  );
+}
+
+// =====================================================
+// COMMAND EXECUTOR
+// =====================================================
+
+void executeCommand(
+  uint8_t client,
+  String json
+)
+{
+  String command =
+    getCommand(json);
+
+  // ----------------------------------------------
+  // PING
+  // ----------------------------------------------
+
+  if (command == "ping")
+  {
+    webSocket.sendTXT(
+      client,
+      "{\"type\":\"pong\"}"
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // PIN MODE
+  // ----------------------------------------------
+
+  if (command == "pinMode")
+  {
+    commandPinMode(
+      client,
+      json
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // DIGITAL WRITE
+  // ----------------------------------------------
+
+  if (command == "digitalWrite")
+  {
+    commandDigitalWrite(
+      client,
+      json
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // DIGITAL READ
+  // ----------------------------------------------
+
+  if (command == "digitalRead")
+  {
+    commandDigitalRead(
+      client,
+      json
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // ANALOG WRITE
+  // PWM
+  // ----------------------------------------------
+
+  if (
+    command == "analogWrite" ||
+    command == "pwm"
+  )
+  {
+    commandAnalogWrite(
+      client,
+      json
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // ANALOG READ
+  // ADC
+  // ----------------------------------------------
+
+  if (
+    command == "analogRead" ||
+    command == "adc"
+  )
+  {
+    commandAnalogRead(
+      client,
+      json
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // STOP
+  // ----------------------------------------------
+
+  if (command == "stop")
+  {
+    // Generic ESP32 has no fixed actuator.
+    // Just acknowledge.
+    sendAck(
+      client,
+      "stop"
+    );
+
+    return;
+  }
+
+  // ----------------------------------------------
+  // UNKNOWN
+  // ----------------------------------------------
+
+  sendError(
+    client,
+    "Unsupported command"
+  );
+}
+
+// =====================================================
+// WEBSOCKET EVENT
+// =====================================================
+
+void webSocketEvent(
+  uint8_t client,
+  WStype_t type,
+  uint8_t* payload,
+  size_t length
+)
+{
+  // -------------------------------------------------
+  // CONNECTED
+  // -------------------------------------------------
+
+  if (
+    type == WStype_CONNECTED
+  )
+  {
+    String hello =
+      "{\"type\":\"hello\",\"protocol\":\"ESP-NEXT-GEN/2\",\"device\":\"ESP32\",\"ip\":\"";
+
+    hello +=
+      WiFi.localIP().toString();
+
+    hello +=
+      "\",\"port\":81,\"executor\":\"generic-hardware\"}";
+
+    webSocket.sendTXT(
+      client,
+      hello
+    );
+
+    return;
+  }
+
+  // -------------------------------------------------
+  // TEXT MESSAGE
+  // -------------------------------------------------
+
+  if (
+    type == WStype_TEXT
+  )
+  {
+    String message;
+
+    for (
+      size_t i = 0;
+      i < length;
+      i++
+    )
+    {
+      message +=
+        (char)payload[i];
+    }
+
+    // Plain PING from current NetworkManager
+    if (message == "PING")
+    {
+      webSocket.sendTXT(
+        client,
+        "PONG"
+      );
+
+      return;
+    }
+
+    // JSON command
+    if (
+      message.startsWith("{")
+    )
+    {
+      executeCommand(
+        client,
+        message
+      );
+
+      return;
+    }
+
+    sendError(
+      client,
+      "Invalid command"
+    );
+  }
+}
+
+// =====================================================
+// SETUP
+// =====================================================
+
+void setup()
+{
+  Serial.begin(
+    115200
+  );
+
+  delay(500);
+
+  Serial.println();
+  Serial.println(
+    "================================"
+  );
+
+  Serial.println(
+    "ESP NEXT GEN"
+  );
+
+  Serial.println(
+    "Generic Hardware Executor"
+  );
+
+  Serial.println(
+    "================================"
+  );
+
+  // -------------------------------------------------
+  // WIFI
+  // -------------------------------------------------
+
+  WiFi.mode(
+    WIFI_STA
+  );
+
+  WiFi.begin(
+    WIFI_SSID,
+    WIFI_PASSWORD
+  );
+
+  Serial.print(
+    "Connecting to WiFi"
+  );
+
+  while (
+    WiFi.status() != WL_CONNECTED
+  )
+  {
+    delay(500);
+
+    Serial.print(
+      "."
+    );
+  }
+
+  Serial.println();
+
+  Serial.println(
+    "WiFi connected"
+  );
+
+  Serial.print(
+    "ESP32 IP: "
+  );
+
+  Serial.println(
+    WiFi.localIP()
+  );
+
+  // -------------------------------------------------
+  // WEBSOCKET
+  // -------------------------------------------------
+
+  webSocket.begin();
+
+  webSocket.onEvent(
+    webSocketEvent
+  );
+
+  Serial.println(
+    "WebSocket server ready"
+  );
+
+  Serial.print(
+    "Port: "
+  );
+
+  Serial.println(
+    WS_PORT
+  );
+
+  Serial.println(
+    "ESP32 READY"
+  );
+
+  Serial.println(
+    "================================"
+  );
+}
+
+// =====================================================
+// LOOP
+// =====================================================
+
+void loop()
+{
+  webSocket.loop();
+}
